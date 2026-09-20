@@ -1,0 +1,360 @@
+// Prisma schema for AccShop.
+// Physical table/column names are mapped (@map) to match the original
+// Drizzle schema so existing data remains compatible.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// --- Better Auth required tables ---------------------------------------------
+// Column names are camelCase (via @map) to match Better Auth's defaults.
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(true) @map("emailVerified")
+  image         String?
+  createdAt     DateTime @default(now()) @map("createdAt")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  accounts Account[]
+  sessions Session[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @map("expiresAt")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @default(now()) @map("updatedAt")
+  ipAddress String?  @map("ipAddress")
+  userAgent String?  @map("userAgent")
+  userId    String   @map("userId")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("accountId")
+  providerId            String    @map("providerId")
+  userId                String    @map("userId")
+  accessToken           String?   @map("accessToken")
+  refreshToken          String?   @map("refreshToken")
+  idToken               String?   @map("idToken")
+  accessTokenExpiresAt  DateTime? @map("accessTokenExpiresAt")
+  refreshTokenExpiresAt DateTime? @map("refreshTokenExpiresAt")
+  scope                 String?
+  issuer                String?   @map("issuer")
+  password              String?
+  createdAt             DateTime  @default(now()) @map("createdAt")
+  updatedAt             DateTime  @default(now()) @map("updatedAt")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime  @map("expiresAt")
+  createdAt  DateTime? @default(now()) @map("createdAt")
+  updatedAt  DateTime? @default(now()) @map("updatedAt")
+
+  @@map("verification")
+}
+
+// --- App tables --------------------------------------------------------------
+// Plain userId columns (no FK) for per-user scoping, matching the live tables.
+
+model Wallet {
+  id           Int      @id @default(autoincrement())
+  userId       String   @unique @map("userId")
+  balance      Decimal  @default(0) @db.Decimal(12, 2)
+  referralCode String?  @unique @map("referral_code")
+  referredBy   String?  @map("referred_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @map("updated_at")
+
+  @@map("wallets")
+}
+
+model Order {
+  id                    Int      @id @default(autoincrement())
+  userId                String   @map("userId")
+  productId             Int?     @map("product_id")
+  productName           String   @map("product_name")
+  tag                   String?
+  price                 Decimal  @db.Decimal(12, 2)
+  quantity              Int      @default(1)
+  deliveredEmail        String?  @map("delivered_email")
+  deliveredPassword     String?  @map("delivered_password")
+  deliveredRefreshToken String?  @map("delivered_refresh_token")
+  deliveredClientId     String?  @map("delivered_client_id")
+  deliveredCredentials  String?  @map("delivered_credentials")
+  actualCost            Decimal? @map("actual_cost") @db.Decimal(12, 2)
+  status                String   @default("pending") @map("status") // pending | processing | completed | failed
+  supplier              String   @default("hotmail143") // hotmail143 | bulkmail
+  externalOrderId       String?  @map("external_order_id")
+  paymentMethodId       Int?     @map("payment_method_id")
+  transactionReference  String?  @map("transaction_reference")
+  senderAccountNumber   String?  @map("sender_account_number")
+  purchasedAt           DateTime @default(now()) @map("purchased_at")
+
+  @@map("orders")
+}
+
+model Transaction {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("userId")
+  type         String // deposit | purchase | referral | transfer
+  description  String?
+  amount       Decimal  @db.Decimal(12, 2)
+  balanceAfter Decimal  @map("balance_after") @db.Decimal(12, 2)
+  status       String   @default("completed") // completed | pending
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("transactions")
+}
+
+// --- Admin-managed catalog / payments / content ------------------------------
+
+model Product {
+  id                  Int      @id @default(autoincrement())
+  slug                String   @unique
+  name                String
+  category            String
+  description         String?
+  price               Decimal  @db.Decimal(12, 2)
+  originalPrice       Decimal? @map("original_price") @db.Decimal(12, 2)
+  stock               Int      @default(0)
+  badge               String?
+  tag                 String?
+  imageUrl            String?  @map("image_url")
+  featured            Boolean  @default(false)
+  active              Boolean  @default(true)
+  sortOrder           Int      @default(0) @map("sort_order")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @map("updated_at")
+  section             String   @default("catalog") // pricing | catalog | social
+  tier                String? // standard | premium | risk (pricing section)
+  domain              String?
+  brandSlug           String?  @map("brand_slug")
+  letter              String?
+  pcs                 Int?
+  note                String?
+  checkFeatures       Json     @default("[]") @map("check_features")
+  starFeatures        Json     @default("[]") @map("star_features")
+  buttonLabel         String?  @map("button_label")
+  externalProductType String?  @map("external_product_type")
+  externalAccountType String?  @map("external_account_type")
+  supplier            String   @default("hotmail143") // hotmail143 | bulkmail | custom
+  bulkmailProductId   Int?     @map("bulkmail_product_id")
+
+  @@map("products")
+}
+
+model PaymentMethod {
+  id            Int      @id @default(autoincrement())
+  name          String
+  type          String   @default("other") // mobile_banking | bank | crypto | other
+  accountNumber String?  @map("account_number")
+  accountName   String?  @map("account_name")
+  instructions  String?
+  icon          String?
+  enabled       Boolean  @default(true)
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  @@map("payment_methods")
+}
+
+model DepositRequest {
+  id                   Int       @id @default(autoincrement())
+  userId               String    @map("userId")
+  paymentMethodId      Int?      @map("payment_method_id")
+  amount               Decimal   @db.Decimal(12, 2)
+  currency             String    @default("USD")
+  senderAccountNumber  String?   @map("sender_account_number")
+  transactionReference String    @map("transaction_reference")
+  proofNote            String?   @map("proof_note")
+  status               String    @default("pending") // pending | approved | rejected
+  adminNote            String?   @map("admin_note")
+  reviewedBy           String?   @map("reviewed_by")
+  reviewedAt           DateTime? @map("reviewed_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  @@map("deposit_requests")
+}
+
+model SiteSetting {
+  id                   Int      @id @default(1)
+  currencySymbol       String   @default("$") @map("currency_symbol")
+  usdToLocalRate       Decimal  @default(1) @map("usd_to_local_rate") @db.Decimal(20, 12)
+  fxLiveEnabled        Boolean  @default(true) @map("fx_live_enabled")
+  minDepositUsd        Decimal  @default(5) @map("min_deposit_usd") @db.Decimal(12, 2)
+  minTransferAmount    Decimal  @default(1) @map("min_transfer_amount") @db.Decimal(12, 2)
+  initialBalance       Decimal  @default(0) @map("initial_balance") @db.Decimal(12, 2)
+  siteName             String   @default("AccShop") @map("site_name")
+  supportUrl           String?  @map("support_url")
+  heroTitle            String?  @map("hero_title")
+  heroSubtitle         String?  @map("hero_subtitle")
+  footerText           String?  @map("footer_text")
+  hotmailApiKey        String?  @map("hotmail_api_key")
+  hotmailApiBaseUrl    String?  @map("hotmail_api_base_url")
+  bulkmailApiKey       String?  @map("bulkmail_api_key")
+  bulkmailApiBaseUrl   String?  @map("bulkmail_api_base_url")
+  customCategories     Json?    @default("[]") @map("custom_categories")
+  // --- Landing page content (all optional, UI falls back to defaults) ---
+  heroBadge            String?  @map("hero_badge")
+  aboutTitle           String?  @map("about_title")
+  aboutSubtitle        String?  @map("about_subtitle")
+  aboutHeading         String?  @map("about_heading")
+  aboutPara1           String?  @map("about_para1")
+  aboutPara2           String?  @map("about_para2")
+  stat1Value           String?  @map("stat1_value")
+  stat1Label           String?  @map("stat1_label")
+  stat2Value           String?  @map("stat2_value")
+  stat2Label           String?  @map("stat2_label")
+  stat3Value           String?  @map("stat3_value")
+  stat3Label           String?  @map("stat3_label")
+  stat4Value           String?  @map("stat4_value")
+  stat4Label           String?  @map("stat4_label")
+  trustTitle           String?  @map("trust_title")
+  trustDesc            String?  @map("trust_desc")
+  trustBullets         String?  @map("trust_bullets")
+  valuesTitle          String?  @map("values_title")
+  valuesSubtitle       String?  @map("values_subtitle")
+  featuresTitle        String?  @map("features_title")
+  featuresSubtitle     String?  @map("features_subtitle")
+  teamTitle            String?  @map("team_title")
+  teamDescription      String?  @map("team_description")
+  teamStat1Value       String?  @map("team_stat1_value")
+  teamStat1Label       String?  @map("team_stat1_label")
+  teamStat2Value       String?  @map("team_stat2_value")
+  teamStat2Label       String?  @map("team_stat2_label")
+  teamImageUrl         String?  @map("team_image_url")
+  testimonialsTitle    String?  @map("testimonials_title")
+  testimonialsSubtitle String?  @map("testimonials_subtitle")
+  faqTitle             String?  @map("faq_title")
+  ctaBadge             String?  @map("cta_badge")
+  ctaTitle             String?  @map("cta_title")
+  ctaSubtitle          String?  @map("cta_subtitle")
+  contactPhone         String?  @map("contact_phone")
+  contactSupportEmail  String?  @map("contact_support_email")
+  contactSalesEmail    String?  @map("contact_sales_email")
+  updatedAt            DateTime @default(now()) @map("updated_at")
+
+  @@map("site_settings")
+}
+
+model Feature {
+  id          Int    @id @default(autoincrement())
+  icon        String
+  title       String
+  description String
+  sortOrder   Int    @default(0) @map("sort_order")
+
+  @@map("features")
+}
+
+model Faq {
+  id        Int    @id @default(autoincrement())
+  question  String
+  answer    String
+  sortOrder Int    @default(0) @map("sort_order")
+
+  @@map("faqs")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  active    Boolean  @default(true)
+  isCustom  Boolean  @default(false)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("categories")
+}
+
+model Testimonial {
+  id        Int      @id @default(autoincrement())
+  stars     Int      @default(5)
+  tag       String   @default("")
+  quote     String
+  name      String
+  role      String   @default("")
+  avatar    String   @default("")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("testimonials")
+}
+
+// --- Live support chat -------------------------------------------------------
+// One thread per user (keyed by userId). sender is "customer" | "admin".
+
+model SupportMessage {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("userId")
+  sender    String   @default("customer") // customer | admin
+  text      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("support_messages")
+}
+
+// --- Customer TOTP authenticator vault -----------------------------------------
+// Encrypted per-user TOTP secrets for the in-dashboard 2FA code generator.
+// Only ciphertext is stored; the vault key lives in server env (TOTP_VAULT_KEY).
+
+model TotpKey {
+  id              Int      @id @default(autoincrement())
+  userId          String   @map("userId")
+  label           String
+  issuer          String   @default("")
+  secretEncrypted String   @map("secret_encrypted") @db.Text
+  algorithm       String   @default("SHA1") // SHA1 | SHA256 | SHA512
+  digits          Int      @default(6)
+  period          Int      @default(30)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @map("updated_at")
+
+  @@index([userId])
+  @@map("totp_keys")
+}
+
+// --- Customer notifications --------------------------------------------------
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("userId")
+  type      String   @default("order_completed") // order_completed | info
+  title     String
+  body      String   @default("")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("notifications")
+}

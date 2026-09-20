@@ -1,0 +1,481 @@
+/* ===================== OUTFIT + GLASSMORPHISM SYSTEM — scoped to .stitch-landing ===================== */
+.stitch-landing *, .stitch-landing *::before, .stitch-landing *::after { box-sizing: border-box; }
+
+.stitch-landing{
+  --bg:#0b0d13;
+  --bg-soft:#0e1117;
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-2: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --text-1: #ffffff;
+  --text-2: #a1a1aa;
+  --text-3: #6b7280;
+  --accent-1:#5362AD;
+  --accent-2:#a5a8d4;
+  --accent-3:#3f4a9e;
+  --accent-grad: linear-gradient(135deg, #5362AD 0%, #6b7ac8 45%, #a5a8d4 100%);
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--bg);
+  color: var(--text-1);
+  font-family:'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  position:relative;
+  min-height:100vh;
+}
+
+/* Tailwind-like base resets scoped */
+.stitch-landing img{ display:block; max-width:100%; }
+.stitch-landing a{ color:inherit; text-decoration:none; }
+.stitch-landing button{ font-family:inherit; cursor:pointer; }
+
+/* ===================== GLASS TOKENS — the four ingredients ===================== */
+/* Base frost tiers */
+.stitch-landing .glass-panel{
+  position:relative;
+  isolation:isolate;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 24px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  transition:
+    backdrop-filter .4s ease,
+    background .4s ease,
+    box-shadow .4s ease,
+    transform .4s var(--ease-spring),
+    border-color .4s ease;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Specular edge highlight — lit top-left → dim bottom-right */
+.stitch-landing .glass-panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  padding:1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.55),
+    rgba(255,255,255,0) 38%,
+    rgba(255,255,255,0) 62%,
+    rgba(255,255,255,0.18)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events:none;
+  opacity:.9;
+  /* keep highlight subtle on dark glass */
+}
+
+/* Anti-banding grain — feTurbulence inline noise */
+.stitch-landing .glass-panel::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Hover — frost deepens, highlight brightens, structural lift (-2px) */
+.stitch-landing .glass-panel:hover{
+  background: rgba(255,255,255,0.09);
+  backdrop-filter: blur(20px) saturate(175%);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  border-color: rgba(255,255,255,0.16);
+  transform: translateY(-2px) translateZ(0);
+  box-shadow:
+    0 16px 48px rgba(0,0,0,0.32),
+    inset 0 1px 0 rgba(255,255,255,0.30);
+}
+@media (hover:none){
+  .stitch-landing .glass-panel:hover{ transform:none; }
+}
+
+/* Light chrome tier — header pill */
+.stitch-landing .glass-pill{
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+/* Heavy frost tier — modal/hero — blur 24-32 */
+.stitch-landing .glass-heavy{
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(28px) saturate(165%);
+  -webkit-backdrop-filter: blur(28px) saturate(165%);
+}
+
+/* Glass chip — floating 3D shape */
+.stitch-landing .glass-chip{
+  position:relative;
+  isolation:isolate;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 100%);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.14);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.28);
+  border-radius:16px;
+}
+.stitch-landing .glass-chip::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.6), transparent 40%, transparent 60%, rgba(255,255,255,0.15));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+
+/* Glass button — small chrome */
+.stitch-landing .glass-btn{
+  background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 100%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: all .3s var(--ease-spring);
+}
+.stitch-landing .glass-btn:hover{
+  background: linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.28);
+}
+
+/* Hero gradient button — primary #5362AD */
+.stitch-landing .hero-btn-gradient{
+  background: linear-gradient(135deg, #5362AD 0%, #6b7ac8 45%, #a5a8d4 100%);
+  color:#ffffff;
+  box-shadow: 0 4px 20px rgba(83,98,173,0.35), inset 0 1px 0 rgba(255,255,255,0.32);
+  transition: transform .3s var(--ease-spring), box-shadow .3s ease, opacity .3s ease;
+}
+.stitch-landing .hero-btn-gradient:hover{
+  opacity:.98;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(83,98,173,0.48), inset 0 1px 0 rgba(255,255,255,0.42);
+}
+.stitch-landing .hero-btn-gradient:active{ transform: scale(.98); }
+
+/* Specular sweep — skewed white gradient */
+.stitch-landing .glass-panel .sweep{
+  position:absolute; inset:0; border-radius:inherit; overflow:hidden; pointer-events:none;
+}
+.stitch-landing .glass-panel .sweep::before{
+  content:""; position:absolute; top:0; left:-60%; width:42%; height:100%;
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.22) 45%, rgba(255,255,255,0.12) 50%, transparent 100%);
+  transform: skewX(-14deg);
+  opacity:0;
+  transition: opacity .3s;
+}
+.stitch-landing .glass-panel:hover .sweep::before{
+  opacity:1;
+  animation: sweep 1.1s var(--ease) forwards;
+}
+@keyframes sweep{
+  0%{ left:-60%; }
+  100%{ left:110%; }
+}
+/* Ambient slow sweep for featured cards — runs every 6s */
+.stitch-landing .glass-panel[data-sweep] .sweep::before{
+  opacity:0;
+  animation: sweepLoop 6.5s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.6s);
+}
+@keyframes sweepLoop{
+  0%, 90%, 100%{ left:-60%; opacity:0; }
+  5%{ opacity:1; }
+  45%{ left:110%; opacity:1; }
+  50%{ opacity:0; }
+}
+
+/* Liquid glass — SVG refraction on hero image wrapper */
+.stitch-landing .liquid{
+  /* light frost under refraction */
+  backdrop-filter: blur(6px) saturate(150%);
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  filter: url(#liquid-glass);
+  /* promote */
+  transform: translateZ(0);
+}
+.stitch-landing .hero-media-liquid{
+  position:relative;
+  border-radius: 24px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
+  /* liquid filter applied here */
+  filter: url(#liquid-glass);
+}
+.stitch-landing .hero-media-liquid::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.22);
+}
+
+/* Entrance — frost resolving */
+.stitch-landing [data-enter]{
+  transition: opacity .6s var(--ease), transform .6s var(--ease), backdrop-filter .7s var(--ease);
+}
+@starting-style{
+  .stitch-landing [data-enter]{
+    opacity:0;
+    backdrop-filter: blur(0px) saturate(100%);
+    -webkit-backdrop-filter: blur(0px) saturate(100%);
+    transform: translateY(16px) scale(.98);
+  }
+}
+/* For browsers without @starting-style, use .in-view fallback */
+/* Reveal — critically-damped spring easing, 60ms structural stagger */
+.stitch-landing [data-reveal]{
+  opacity:0;
+  transform: translateY(22px);
+  transition: opacity .55s var(--ease-spring), transform .55s var(--ease-spring);
+}
+.stitch-landing [data-reveal].in-view{
+  opacity:1;
+  transform: translateY(0);
+}
+.stitch-landing [data-reveal][data-i="0"]{ transition-delay:0s; }
+.stitch-landing [data-reveal][data-i="1"]{ transition-delay:.06s; }
+.stitch-landing [data-reveal][data-i="2"]{ transition-delay:.12s; }
+.stitch-landing [data-reveal][data-i="3"]{ transition-delay:.18s; }
+
+/* Ambient background glows — must be busy backdrop for frost to read */
+.stitch-landing .ambient{
+  position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+}
+.stitch-landing .glow{
+  position:absolute; border-radius:999px; filter: blur(50px);
+}
+.stitch-landing .glow-a{ top:-140px; left:-140px; width:560px; height:560px; background: rgba(83,98,173,0.20); filter:blur(120px); }
+.stitch-landing .glow-b{ top:18%; right:-110px; width:620px; height:620px; background: rgba(92,105,177,0.18); filter:blur(130px); }
+.stitch-landing .glow-c{ top:52%; left:50%; transform:translateX(-50%); width:720px; height:460px; background: rgba(165,168,212,0.13); filter:blur(140px); }
+.stitch-landing .glow-d{ bottom:-90px; right:-90px; width:520px; height:520px; background: rgba(63,55,201,0.18); filter:blur(120px); }
+
+.floating{
+  animation: floatA 14s ease-in-out infinite;
+  will-change: transform;
+}
+.floating.b{ animation: floatB 16s ease-in-out infinite; }
+.floating.c{ animation: pulseGlow 11s ease-in-out infinite; }
+@keyframes floatA{ 0%,100%{ transform: translate(0,0) rotate(12deg);} 50%{ transform: translate(10px, -14px) rotate(14deg);} }
+@keyframes floatB{ 0%,100%{ transform: translate(0,0) rotate(-12deg);} 50%{ transform: translate(-12px, 12px) rotate(-9deg);} }
+@keyframes pulseGlow{ 0%,100%{ opacity:.42; transform:scale(1);} 50%{ opacity:.68; transform:scale(1.07);} }
+
+/* Header pill — light frost */
+.stitch-landing .nav-pill{
+  display:flex; align-items:center; gap:4px;
+  padding:6px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.09);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.16);
+}
+.stitch-landing .nav-pill a{
+  padding:7px 18px; border-radius:999px; font-size:13.5px; font-weight:500; color:#9ca3af; transition: all .25s var(--ease);
+}
+.stitch-landing .nav-pill a.active{ background: rgba(255,255,255,0.12); color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.18); }
+.stitch-landing .nav-pill a:hover{ color:#fff; }
+
+/* Tag pill */
+.stitch-landing .tag-pill{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 14px 6px 10px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.10);
+  font-size:12.5px;
+}
+
+/* FAQ — glass details */
+.stitch-landing details.glass-panel{
+  border-radius:999px;
+  padding:0;
+  overflow:hidden;
+}
+.stitch-landing details.glass-panel[open]{
+  border-radius:20px;
+  background: rgba(255,255,255,0.07);
+}
+.stitch-landing details.glass-panel summary{
+  list-style:none;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:16px 22px;
+  cursor:pointer;
+  font-size:13.5px; font-weight:600; color:#e5e7eb;
+}
+.stitch-landing details.glass-panel summary::-webkit-details-marker{ display:none; }
+.stitch-landing details.glass-panel summary:focus-visible{
+  outline: 3px solid rgba(83,98,173,0.5);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+.stitch-landing details.glass-panel .faq-body{
+  padding:0 22px 18px;
+  color:#9ca3af;
+  font-size:13.5px; line-height:1.6;
+  border-top:1px solid rgba(255,255,255,0.06);
+  margin:0 22px; padding-top:12px;
+}
+
+/* Scrollbar hide for carousel */
+.stitch-landing .car-viewport{
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.stitch-landing .car-viewport::-webkit-scrollbar{ display:none; }
+
+/* Reduced motion / transparency — non-negotiable */
+@media (prefers-reduced-transparency: reduce){
+  .stitch-landing .glass-panel,
+  .stitch-landing .glass-chip,
+  .stitch-landing .glass-btn,
+  .stitch-landing .nav-pill{
+    background: #1a1d2f;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+    border-color: rgba(255,255,255,0.14);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .stitch-landing .glass-panel::before,
+  .stitch-landing .glass-panel::after,
+  .stitch-landing .glass-chip::before{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .stitch-landing .glass-panel,
+  .stitch-landing .glass-panel .sweep::before,
+  .stitch-landing .floating,
+  .stitch-landing .liquid,
+  .stitch-landing [data-reveal]{
+    transition:none !important; animation:none !important; filter:none !important;
+  }
+  .stitch-landing .liquid{ filter:none !important; }
+}
+@supports not (backdrop-filter: blur(1px)){
+  .stitch-landing .glass-panel{ background: rgba(24,26,42,0.92); }
+  .stitch-landing .nav-pill{ background: rgba(24,26,42,0.88); }
+}
+
+/* Contrast defense — scrim under text on glass over photo */
+.stitch-landing .scrim{
+  background: linear-gradient(180deg, rgba(11,13,19,0) 38%, rgba(11,13,19,0.78) 100%);
+}
+.stitch-landing .glass-panel h3,
+.stitch-landing .glass-panel p{ text-shadow: 0 1px 2px rgba(0,0,0,0.28); }
+
+/* Freeze harness — deterministic state */
+:root[data-state="hover"] .stitch-landing .glass-panel{
+  background: rgba(255,255,255,0.09);
+  backdrop-filter: blur(20px) saturate(175%);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.30);
+}
+:root[data-state="hover"] .stitch-landing .glass-panel .sweep::before{
+  left:110%; opacity:1; animation:none;
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  .stitch-landing .glow-a, .stitch-landing .glow-b{ opacity:.7; }
+}
+@media (max-width: 640px){
+  .stitch-landing .nav-pill{ display:none; }
+  .stitch-landing .glass-panel{ border-radius:20px; }
+}
+
+/* Legacy support — keep old class names working if referenced */
+.stitch-landing .frame-panel{ /* deprecated wrapper — now transparent */ background:transparent; border:none; box-shadow:none; }
+.stitch-landing .navbar{ /* mapped to new header */ }
+
+/* ===================== LIGHT THEME — scoped glass overrides =====================
+   Dark remains the default (see :root vars above). When next-themes removes the
+   .dark class from <html>, these overrides re-skin the landing for light mode. */
+html:not(.dark) .stitch-landing{
+  --bg:#f2f2f6;
+  --bg-soft:#e9e9ef;
+  --glass: rgba(255,255,255,0.65);
+  --glass-2: rgba(255,255,255,0.82);
+  --glass-border: rgba(15,18,30,0.10);
+  --glass-border-strong: rgba(15,18,30,0.16);
+  --text-1: #17171c;
+  --text-2: #52525b;
+  --text-3: #71717a;
+  --accent-2:#5362AD;
+}
+html:not(.dark) .stitch-landing .glass-panel{
+  background: rgba(255,255,255,0.66);
+  border-color: rgba(15,18,30,0.10);
+  box-shadow:
+    0 8px 32px rgba(20,22,40,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.75);
+}
+html:not(.dark) .stitch-landing .glass-panel:hover{
+  background: rgba(255,255,255,0.78);
+  border-color: rgba(15,18,30,0.16);
+  box-shadow:
+    0 16px 48px rgba(20,22,40,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+}
+html:not(.dark) .stitch-landing .glass-pill,
+html:not(.dark) .stitch-landing .nav-pill,
+html:not(.dark) .stitch-landing .tag-pill{
+  background: rgba(255,255,255,0.6);
+  border-color: rgba(15,18,30,0.10);
+  box-shadow: 0 8px 32px rgba(20,22,40,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+html:not(.dark) .stitch-landing .nav-pill a{ color:#52525b; }
+html:not(.dark) .stitch-landing .nav-pill a.active,
+html:not(.dark) .stitch-landing .nav-pill a:hover{ color:#17171c; }
+html:not(.dark) .stitch-landing .nav-pill a.active{ background: rgba(83,98,173,0.14); }
+html:not(.dark) .stitch-landing .glass-chip{
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 100%);
+  border-color: rgba(15,18,30,0.12);
+  box-shadow: 0 8px 24px rgba(20,22,40,0.10), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+html:not(.dark) .stitch-landing .glass-btn{
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.65) 100%);
+  border-color: rgba(15,18,30,0.12);
+  box-shadow: 0 4px 16px rgba(20,22,40,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+html:not(.dark) .stitch-landing .glass-btn:hover{
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.8) 100%);
+  box-shadow: 0 8px 24px rgba(20,22,40,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+html:not(.dark) .stitch-landing .hero-media-liquid{
+  border-color: rgba(15,18,30,0.12);
+  box-shadow: 0 20px 60px rgba(20,22,40,0.16), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+html:not(.dark) .stitch-landing details.glass-panel summary{ color:#27272a; }
+html:not(.dark) .stitch-landing details.glass-panel .faq-body{
+  color:#52525b;
+  border-top-color: rgba(15,18,30,0.08);
+}
+html:not(.dark) .stitch-landing details.glass-panel[open]{ background: rgba(255,255,255,0.75); }
+html:not(.dark) .stitch-landing .glass-panel h3,
+html:not(.dark) .stitch-landing .glass-panel p{ text-shadow:none; }
+html:not(.dark) .stitch-landing .glow-a{ background: rgba(83,98,173,0.14); }
+html:not(.dark) .stitch-landing .glow-b{ background: rgba(92,105,177,0.12); }
+html:not(.dark) .stitch-landing .glow-c{ background: rgba(165,168,212,0.16); }
+html:not(.dark) .stitch-landing .glow-d{ background: rgba(63,55,201,0.10); }

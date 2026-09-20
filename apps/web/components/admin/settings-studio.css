@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
+
+.settings-studio {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  overflow-x: hidden;
+}
+
+.settings-studio .font-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Ambient Technical Micro-Grid */
+.settings-studio.bg-micro-grid {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Radial Ambient Glowing Orbs */
+.settings-studio .radial-glow-1 {
+  background: radial-gradient(circle, rgba(83, 98, 173, 0.16) 0%, rgba(5, 5, 8, 0) 70%);
+}
+
+.settings-studio .radial-glow-2 {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(5, 5, 8, 0) 65%);
+}
+
+/* Luminous Glass Panel Styling */
+.settings-studio .glass-panel {
+  background: rgba(18, 18, 28, 0.68);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.settings-studio .glass-input {
+  background: rgba(12, 12, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color-scheme: dark;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-studio .glass-input:focus {
+  background: rgba(16, 16, 26, 0.95);
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18), 0 0 15px rgba(88, 101, 242, 0.2);
+  outline: none;
+}
+
+.settings-studio .glass-input::placeholder {
+  color: #475569;
+}
+
+/* Custom Scrollbars */
+.settings-studio ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.settings-studio ::-webkit-scrollbar-track {
+  background: rgba(5, 5, 8, 0.8);
+}
+.settings-studio ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+}
+.settings-studio ::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.45);
+}

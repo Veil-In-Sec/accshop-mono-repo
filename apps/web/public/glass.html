@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AccShop — Glassmorphism Demo (Outfit)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['"Outfit"', 'sans-serif'] },
+      colors: {
+        darkBg: '#0b0d13',
+        cardBg: 'rgba(255,255,255,0.03)',
+        accentPeach: '#e29982'
+      }
+    }
+  }
+}
+</script>
+<style>
+/* ============== Glass System — Outfit + four ingredients ============== */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#0b0d13;
+  color:#e5e7eb;
+  font-family:'Outfit',ui-sans-serif,system-ui,sans-serif;
+  overflow-x:hidden;
+}
+/* base glass */
+.glass-panel{
+  position:relative; isolation:isolate;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.12);
+  transition: backdrop-filter .4s ease, background .4s ease, box-shadow .4s ease, transform .4s cubic-bezier(.16,1,.3,1), border-color .4s ease;
+  will-change:transform; transform:translateZ(0);
+}
+.glass-panel::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 38%, rgba(255,255,255,0) 62%, rgba(255,255,255,0.18));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  pointer-events:none; opacity:.9;
+}
+.glass-panel::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  opacity:0.035; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.glass-panel:hover{
+  background: rgba(255,255,255,0.09);
+  backdrop-filter: blur(20px) saturate(175%);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.16);
+}
+.glass-chip{
+  position:relative; isolation:isolate;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 100%);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.28);
+}
+.glass-chip::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.6), transparent 40%, transparent 60%, rgba(255,255,255,0.15));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;
+}
+.glass-btn{
+  background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 100%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+}
+.glass-btn:hover{
+  background: linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 100%);
+  transform: translateY(-2px);
+}
+.hero-btn-gradient{
+  background: linear-gradient(135deg, #f5c3b2 0%, #e0927d 60%, #c47661 100%);
+  color:#171110;
+  box-shadow: 0 4px 20px rgba(224,146,125,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease;
+}
+.hero-btn-gradient:hover{ transform:translateY(-2px) scale(1.02); box-shadow:0 8px 28px rgba(224,146,125,0.48); }
+.sweep{ position:absolute; inset:0; border-radius:inherit; overflow:hidden; pointer-events:none; }
+.sweep::before{
+  content:""; position:absolute; top:0; left:-60%; width:42%; height:100%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.22) 45%, rgba(255,255,255,0.12) 50%, transparent 100%);
+  transform: skewX(-14deg); opacity:0;
+}
+.glass-panel:hover .sweep::before{ opacity:1; animation:sweep 1.05s ease forwards; }
+@keyframes sweep{ 0%{left:-60%} 100%{left:110%} }
+.liquid{ filter:url(#liquid-glass); }
+.hero-liquid{ filter:url(#liquid-glass); border:1px solid rgba(255,255,255,0.14); box-shadow: 0 20px 60px rgba(0,0,0,0.45); }
+[data-reveal]{ opacity:0; transform:translateY(18px); transition: opacity .7s cubic-bezier(.23,1,.32,1), transform .7s cubic-bezier(.23,1,.32,1); }
+[data-reveal].in-view{ opacity:1; transform:none; }
+[data-reveal][data-i="1"]{ transition-delay:.08s; } [data-reveal][data-i="2"]{ transition-delay:.16s; }
+.glow{ position:absolute; border-radius:999px; filter:blur(40px); }
+.floating{ animation: floatA 14s ease-in-out infinite; will-change:transform; }
+.floating.b{ animation: floatB 16s ease-in-out infinite; }
+@keyframes floatA{ 0%,100%{transform:translate(0,0) rotate(12deg)} 50%{transform:translate(10px,-14px) rotate(14deg)} }
+@keyframes floatB{ 0%,100%{transform:translate(0,0) rotate(-12deg)} 50%{transform:translate(-12px,12px) rotate(-9deg)} }
+.scrim{ background: linear-gradient(180deg, rgba(11,13,19,0) 38%, rgba(11,13,19,0.78) 100%); }
+details.glass-panel{ border-radius:999px; padding:0; overflow:hidden; }
+details.glass-panel[open]{ border-radius:20px; background: rgba(255,255,255,0.07); }
+details.glass-panel summary{ list-style:none; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 22px; cursor:pointer; font-size:13.5px; font-weight:600; color:#e5e7eb; }
+details.glass-panel summary::-webkit-details-marker{ display:none; }
+.faq-body{ padding:0 22px 18px; color:#9ca3af; font-size:13.5px; line-height:1.6; border-top:1px solid rgba(255,255,255,0.06); margin:0 22px; padding-top:12px; }
+@media (prefers-reduced-transparency: reduce){
+  .glass-panel, .glass-chip, .glass-btn{ background:#1a1d2f; backdrop-filter:none; -webkit-backdrop-filter:none; }
+  .glass-panel::before, .glass-panel::after, .glass-chip::before{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .glass-panel, .sweep::before, .floating, .liquid{ transition:none !important; animation:none !important; filter:none !important; }
+}
+@supports not (backdrop-filter: blur(1px)){ .glass-panel{ background: rgba(24,26,42,0.92); } }
+:root[data-state="hover"] .glass-panel{
+  background: rgba(255,255,255,0.09); backdrop-filter: blur(20px) saturate(175%); -webkit-backdrop-filter: blur(20px) saturate(175%);
+  transform: translateY(-4px);
+}
+:root[data-state="hover"] .sweep::before{ left:110%; opacity:1; animation:none; }
+</style>
+</head>
+<body class="bg-[#0b0d13] text-gray-200 font-sans antialiased relative overflow-x-hidden selection:bg-[#e0927d]/30 selection:text-white">
+<!-- SVG liquid glass -->
+<svg width="0" height="0" style="position:absolute"><filter id="liquid-glass">
+  <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="3" result="n">
+    <animate attributeName="baseFrequency" dur="18s" values="0.008 0.012;0.012 0.008;0.008 0.012" repeatCount="indefinite"/>
+  </feTurbulence>
+  <feDisplacementMap in="SourceGraphic" in2="n" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+</filter></svg>
+
+<!-- Ambient busy backdrop -->
+<div aria-hidden="true" class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+  <div class="glow" style="top:-140px;left:-140px;width:560px;height:560px;background:rgba(83,98,173,0.20);filter:blur(120px)"></div>
+  <div class="glow" style="top:18%;right:-110px;width:620px;height:620px;background:rgba(92,105,177,0.18);filter:blur(130px)"></div>
+  <div class="glow" style="top:52%;left:50%;transform:translateX(-50%);width:720px;height:460px;background:rgba(165,168,212,0.13);filter:blur(140px)"></div>
+  <div class="glow" style="bottom:-90px;right:-90px;width:520px;height:520px;background:rgba(63,55,201,0.18);filter:blur(120px)"></div>
+  <div class="floating glass-chip" style="position:absolute;top:96px;left:40px;width:64px;height:112px;opacity:.42"></div>
+  <div class="floating b glass-chip" style="position:absolute;top:520px;right:48px;width:96px;height:96px;opacity:.38"></div>
+  <div class="floating" style="position:absolute;top:672px;left:24px;width:32px;height:32px;border-radius:999px;background:linear-gradient(to top right, rgba(255,255,255,0.16), transparent);border:1px solid rgba(255,255,255,0.18);opacity:.5"></div>
+</div>
+
+<div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<header class="w-full flex items-center justify-between py-4">
+  <a href="#" class="flex items-center gap-2.5 group"><div class="w-9 h-9 rounded-xl bg-[#5362ad]/20 border border-[#a5a8d4]/30 flex items-center justify-center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#a5a8d4]"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></div><span class="text-white font-extrabold text-lg tracking-tight">AccShop</span></a>
+  <nav class="hidden sm:flex items-center gap-1 p-1.5 rounded-full" style="background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.09)"><a href="#" class="px-5 py-1.5 rounded-full bg-white/12 text-white text-sm font-medium">Home</a><a href="#" class="px-5 py-1.5 rounded-full text-gray-400 hover:text-white text-sm">About</a></nav>
+  <a href="#" class="inline-flex items-center px-5 py-2 rounded-full glass-btn text-xs font-semibold text-gray-200">Get Started Now</a>
+</header>
+
+<section class="pt-8 pb-12 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center" data-reveal>
+  <div class="lg:col-span-6 space-y-6">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full" style="background:rgba(255,255,255,0.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.10)"><span class="text-xs font-semibold text-[#a5a8d4]">AccShop</span><span class="text-xs text-gray-400">Email Marketplace</span></div>
+    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.12]">Premium Email Accounts, <br>Built for Your Success</h1>
+    <p class="text-sm text-gray-400 leading-relaxed max-w-md">Secure, trusted Hotmail, Outlook, and Gmail accounts to power your growth. Instant delivery, no personal data required.</p>
+    <div class="flex flex-wrap items-center gap-4 pt-1"><a href="#" class="hero-btn-gradient px-6 py-3 rounded-full text-xs font-bold tracking-wide">Get Started Now</a><a href="#" class="px-4 py-3 text-xs font-medium text-gray-300 underline underline-offset-8 decoration-white/30">View Products</a></div>
+  </div>
+  <div class="lg:col-span-6 relative flex justify-center">
+    <div class="hero-liquid rounded-3xl overflow-hidden p-2 w-full max-w-lg liquid" data-reveal data-i="1">
+      <div class="rounded-2xl overflow-hidden relative"><img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=1200&q=80" class="w-full h-80 sm:h-96 object-cover"/><div class="scrim absolute inset-0"></div></div>
+      <div class="sweep"></div>
+    </div>
+    <div class="absolute -bottom-6 -right-2 w-28 h-28 rounded-2xl glass-chip p-3 hidden sm:flex flex-col justify-end">
+      <div class="sweep"></div>
+      <div class="w-8 h-8 rounded-full bg-[#5362ad]/25 border border-[#a5a8d4]/40 flex items-center justify-center mb-2"><svg class="w-4 h-4 text-[#a5a8d4]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+      <span class="text-[10px] font-semibold text-gray-200">Verified Quality</span>
+    </div>
+  </div>
+</section>
+
+<section class="py-16 text-center" data-reveal>
+  <div class="max-w-xl mx-auto mb-10 space-y-2"><h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Why Trust Us</h2><p class="text-xs text-gray-400">Reliable glassmorphic email solutions engineered for scale and speed</p></div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+    <div class="glass-panel p-7"><div class="sweep"></div><div class="w-12 h-12 rounded-2xl bg-[#5362ad]/15 border border-[#a5a8d4]/30 flex items-center justify-center mb-5"><svg class="w-6 h-6 text-[#a5a8d4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"></path></svg></div><h3 class="text-sm font-bold text-white mb-2">Secure & Private</h3><p class="text-xs text-gray-400 leading-relaxed">Bank-grade encrypted delivery. Protect your operations with pristine, non-recycled accounts.</p></div>
+    <div class="glass-panel p-7" data-reveal data-i="1"><div class="sweep"></div><div class="w-12 h-12 rounded-2xl bg-[#5362ad]/15 border border-[#a5a8d4]/30 flex items-center justify-center mb-5"><svg class="w-6 h-6 text-[#a5a8d4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path></svg></div><h3 class="text-sm font-bold text-white mb-2">Instant Delivery</h3><p class="text-xs text-gray-400 leading-relaxed">Automated checkout dispatch. Receive live verified credentials instantly.</p></div>
+    <div class="glass-panel p-7" data-reveal data-i="2"><div class="sweep"></div><div class="w-12 h-12 rounded-2xl bg-[#5362ad]/15 border border-[#a5a8d4]/30 flex items-center justify-center mb-5"><svg class="w-6 h-6 text-[#a5a8d4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path></svg></div><h3 class="text-sm font-bold text-white mb-2">24/7 Human Support</h3><p class="text-xs text-gray-400 leading-relaxed">Dedicated specialists standby around the clock via live chat.</p></div>
+  </div>
+</section>
+
+<section class="py-16 text-center" data-reveal>
+  <div class="max-w-xl mx-auto mb-10 space-y-2"><h2 class="text-2xl sm:text-3xl font-extrabold text-white">Testimonials</h2><p class="text-xs text-gray-400">Authentic reviews from hundreds of happy users</p></div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+    <div class="glass-panel overflow-hidden h-64 sm:h-72 p-0" style="padding:0"><div class="sweep"></div><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover"/><div class="scrim absolute inset-0"></div></div>
+    <div class="glass-panel p-6 flex flex-col items-center justify-center h-64 sm:h-72"><div class="sweep"></div><div class="w-14 h-14 rounded-full border-2 border-[#f5c3b2]/60 overflow-hidden mb-4"><img src="https://randomuser.me/api/portraits/women/68.jpg" class="w-full h-full object-cover"/></div><p class="text-sm font-semibold text-white mb-1">“Game-changer for my business!”</p><span class="text-xs text-gray-400">– Sarah K.</span></div>
+    <div class="glass-panel overflow-hidden h-64 sm:h-72 p-0" style="padding:0"><div class="sweep"></div><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover"/><div class="scrim absolute inset-0"></div></div>
+    <div class="glass-panel p-6 flex flex-col items-center justify-center h-64 sm:h-72"><div class="sweep"></div><div class="w-14 h-14 rounded-full border-2 border-[#f5c3b2]/60 overflow-hidden mb-4"><img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-full h-full object-cover"/></div><p class="text-sm font-semibold text-white mb-1">“Exceptional speed and customer care!”</p><span class="text-xs text-gray-400">– Messa B.</span></div>
+  </div>
+  <div class="flex items-center justify-center gap-2 mt-7"><span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span><span class="w-5 h-1.5 rounded-full bg-[#a5a8d4]"></span><span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span></div>
+</section>
+
+<section class="py-16 max-w-3xl mx-auto" data-reveal>
+  <div class="text-center mb-8"><h2 class="text-2xl sm:text-3xl font-extrabold text-white">FAQ</h2></div>
+  <div class="space-y-3">
+    <details class="glass-panel"><div class="sweep"></div><summary><span>What are verified email accounts?</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="faq-body">Verified email accounts are fully configured, secure accounts ready for corporate outreach.</div></details>
+    <details class="glass-panel"><div class="sweep"></div><summary><span>How does instant delivery work?</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="faq-body">Automated dispatch delivers credentials in under 60 seconds.</div></details>
+    <details class="glass-panel"><div class="sweep"></div><summary><span>How long do these email accounts last?</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="faq-body">Accounts have unlimited validity with fair usage.</div></details>
+    <details class="glass-panel"><div class="sweep"></div><summary><span>What is your replacement & refund policy?</span><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></summary><div class="faq-body">48-hour warranty — instant replacement for non-working credentials.</div></details>
+  </div>
+</section>
+
+<footer class="mt-12 mb-8 glass-panel rounded-3xl p-8 sm:p-10" data-reveal>
+  <div class="sweep"></div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div class="space-y-4"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-[#5362ad]/20 border border-[#a5a8d4]/30 flex items-center justify-center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-[#a5a8d4]"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div><h3 class="text-xl font-bold text-white">AccShop</h3></div><p class="text-xs text-gray-400 leading-relaxed">AccShop provides enterprise-grade, verified email infrastructure at genuine marketplace rates.</p></div>
+    <div class="space-y-3"><h4 class="text-xs font-bold uppercase tracking-wider text-gray-300">Social links</h4><ul class="space-y-2 text-xs text-gray-400"><li><a href="#" class="hover:text-white">About us</a></li><li><a href="#" class="hover:text-white">Twitter</a></li><li><a href="#" class="hover:text-white">Contact</a></li></ul></div>
+    <div class="space-y-3"><h4 class="text-xs font-bold uppercase tracking-wider text-gray-300">Contact info</h4><ul class="space-y-2 text-xs text-gray-400"><li>+1 122345 7890</li><li>support@accshop.com</li></ul></div>
+    <div class="glass-panel rounded-2xl p-3 flex flex-col items-center text-center" style="padding:12px"><div class="sweep"></div><div class="rounded-xl overflow-hidden mb-2 w-full h-24"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=500&q=80" class="w-full h-full object-cover"/></div><span class="text-[11px] text-gray-300">We&apos;re here with our support team</span></div>
+  </div>
+  <div class="mt-8 pt-6 border-t border-white/5 text-center text-xs text-gray-500">© 2026 AccShop. All rights reserved. · <a href="https://veilinsec.netlify.app" class="text-[#a5a8d4] underline">Develop by VIS Softs</a></div>
+</footer>
+</div>
+
+<script>
+// reveal
+const els=document.querySelectorAll('[data-reveal]');
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in-view'); io.unobserve(e.target)}})},{threshold:0.15});
+els.forEach(el=>io.observe(el));
+// freeze harness
+const p=new URLSearchParams(location.search);
+const state=p.get("state");
+if(state) document.documentElement.dataset.state=state;
+const t=p.get("t");
+if(t!==null){
+  document.getAnimations().forEach(a=>{ a.currentTime=parseFloat(t)*1000; a.pause(); });
+  const svg=document.querySelector("svg");
+  svg?.pauseAnimations?.(); svg?.setCurrentTime?.(parseFloat(t));
+}
+window.__ready=true;
+</script>
+</body>
+</html>
