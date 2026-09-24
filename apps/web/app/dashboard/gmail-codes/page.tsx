@@ -14,6 +14,7 @@ import { copyToClipboard } from "@/lib/clipboard"
 import { cn } from "@/lib/utils"
 import type {
   GmailCodeResponse,
+  GraphCodeResponse,
   HotmailCodeResponse,
   HotmailLookupResponse,
   OutlookCodeResponse,
@@ -34,7 +35,9 @@ async function copyCode(value: string | number | null | undefined) {
  * Retries every "not yet" state (including empty `data`) but never an
  * expired address (`code === -3`) or an explicit `shouldRetry: false`.
  */
-function retryAfterSeconds(result: HotmailCodeResponse | OutlookCodeResponse): number | null {
+function retryAfterSeconds(
+  result: HotmailCodeResponse | OutlookCodeResponse | GraphCodeResponse,
+): number | null {
   const data = result.data
   if (result.successful && data?.code) return null
   if (result.code === -3) return null
@@ -48,8 +51,9 @@ const MAX_AUTO_RETRIES = 6
 export default function GetCodePage() {
   const [tab, setTab] = React.useState<Tab>("gmail")
   const [gmailEmail, setGmailEmail] = React.useState("")
-  // Credentials line from the order. Full 4-part lines use the Hotmail
-  // service; shorter lines (email or email|password) use the Outlook service.
+  // Credentials line from the order (email|password|refresh_token|client_id).
+  // Looked up via the GraphMail API. A bare email works when the order
+  // already stores refresh_token + client_id for that address.
   const [hoLine, setHoLine] = React.useState("")
 
   const [loading, setLoading] = React.useState(false)
@@ -57,10 +61,12 @@ export default function GetCodePage() {
   const [gmailRes, setGmailRes] = React.useState<GmailCodeResponse | null>(null)
   const [outlookRes, setOutlookRes] = React.useState<OutlookCodeResponse | null>(null)
   const [hotmailRes, setHotmailRes] = React.useState<HotmailCodeResponse | null>(null)
+  const [graphRes, setGraphRes] = React.useState<GraphCodeResponse | null>(null)
 
   function clearHoResults() {
     setOutlookRes(null)
     setHotmailRes(null)
+    setGraphRes(null)
   }
 
   function scheduleRetry(seconds?: number) {
@@ -121,9 +127,8 @@ export default function GetCodePage() {
       }
       clearHoResults()
 
-      // One endpoint handles every line shape: full 4-part lines go to the
-      // Hotmail service, shorter lines to the Outlook service. The response
-      // envelope tells us which one answered.
+      // One endpoint handles every line shape via the GraphMail API.
+      // The response envelope tells us which backend answered.
       const res = await fetchHotmailCode(line)
       if (!res.ok) {
         toast.error(res.message)
@@ -131,6 +136,12 @@ export default function GetCodePage() {
       }
       const lookup: HotmailLookupResponse = res.data
       const result = lookup.result
+      if (lookup.kind === "graph") {
+        const graph = result as GraphCodeResponse
+        setGraphRes(graph)
+        handleLookupResult(graph, isAutoRetry)
+        return
+      }
       if (lookup.kind === "outlook") {
         const outlook = result as OutlookCodeResponse
         setOutlookRes(outlook)
@@ -145,9 +156,9 @@ export default function GetCodePage() {
     }
   }
 
-  /** Shared success / waiting / retry handling for Hotmail + Outlook results. */
+  /** Shared success / waiting / retry handling for Graph + Hotmail + Outlook results. */
   function handleLookupResult(
-    result: HotmailCodeResponse | OutlookCodeResponse,
+    result: HotmailCodeResponse | OutlookCodeResponse | GraphCodeResponse,
     isAutoRetry: boolean,
   ) {
     if (result.successful && result.data?.code) {
@@ -241,7 +252,7 @@ export default function GetCodePage() {
             />
             <p className="mt-2 text-xs text-muted-foreground">
               Paste the credentials line from your order (email|password|refresh_token|client_id).
-              Email alone — or email|password — also works for Outlook-service products.
+              A bare email also works when the order stores its refresh_token + client_id.
             </p>
           </>
         )}
@@ -302,6 +313,76 @@ export default function GetCodePage() {
             <p className="mt-3 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
               No code yet — request a new OTP on the source site, then retry.
             </p>
+          )}
+        </div>
+      )}
+
+      {tab === "hotmail-outlook" && graphRes && (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="text-xs text-muted-foreground">{graphRes.msg}</p>
+          {graphRes.data?.code ? (
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3">
+              <span className="font-mono text-2xl font-bold tracking-widest text-foreground">
+                {graphRes.data.code}
+              </span>
+              <button
+                type="button"
+                onClick={() => void copyCode(graphRes.data?.code ?? '')}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+              >
+                <Copy className="size-3.5" /> Copy
+              </button>
+            </div>
+          ) : (
+            <p className="mt-3 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+              No code yet — request a new OTP, then press Get Verification Code again.
+            </p>
+          )}
+          {graphRes.data?.email && (
+            <p className="mt-2 text-xs text-muted-foreground">Mailbox: {graphRes.data.email}</p>
+          )}
+          {graphRes.data?.latest && (
+            <div className="mt-3 rounded-lg bg-muted p-3 text-xs">
+              <p className="font-medium text-foreground">
+                {graphRes.data.latest.subject ?? 'Latest email'}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                From:{' '}
+                {graphRes.data.latest.from?.[0]?.name ??
+                  graphRes.data.latest.from?.[0]?.address ??
+                  'unknown'}
+                {graphRes.data.latest.date ? ` • ${graphRes.data.latest.date}` : ''}
+              </p>
+            </div>
+          )}
+          {graphRes.data?.messages && graphRes.data.messages.length > 0 && (
+            <ul className="mt-3 flex flex-col gap-1.5 text-xs">
+              {graphRes.data.messages.slice(0, 5).map((m, i) => (
+                <li
+                  key={m.uid ?? i}
+                  className="flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-2"
+                >
+                  <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                    {m.subject ?? `Message ${m.uid ?? i + 1}`}
+                  </span>
+                  {m.code ? (
+                    <span className="flex items-center gap-2">
+                      <span className="font-mono font-semibold text-foreground">{m.code}</span>
+                      <button
+                        type="button"
+                        aria-label={`Copy code ${m.code}`}
+                        onClick={() => void copyCode(m.code)}
+                        className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-muted"
+                      >
+                        <Copy className="size-3" /> Copy
+                      </button>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">no code</span>
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
@@ -397,7 +478,7 @@ export default function GetCodePage() {
             <div className="mt-3 rounded-lg bg-muted px-4 py-3 text-sm">
               <p className="text-foreground">That address was not purchased from the Outlook code service.</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Paste your full order credentials line above to retry via the Hotmail service.
+                Paste your full order credentials line above to retry via the GraphMail service.
               </p>
             </div>
           ) : (
@@ -416,7 +497,7 @@ export default function GetCodePage() {
         </p>
         <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-xs">
           <li>Enter your Gmail address to fetch its code.</li>
-          <li>Paste your order credentials line — the full email|password|refresh_token|client_id line uses the Hotmail service; email alone (or email|password) uses the Outlook service.</li>
+          <li>Paste your order credentials line (email|password|refresh_token|client_id) — codes are read via the GraphMail API. A bare email also works when your order already stores its refresh_token + client_id.</li>
           <li>Delivered lines only ever contain the parts your product provides — no empty separators.</li>
         </ul>
       </div>

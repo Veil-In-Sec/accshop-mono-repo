@@ -1,13 +1,16 @@
-// Dynamic currency symbol - defaults to BDT but can be overridden by settings
+// Single sync currency-symbol store shared by server + client formatting.
+// The async sources (useCurrencySymbol hook, getCurrencySymbol server helper)
+// write through here so formatMoney() stays in sync.
 let cachedCurrencySymbol: string = "BDT"
 
 export function setCurrencySymbol(symbol: string) {
-  cachedCurrencySymbol = symbol
+  if (symbol?.trim()) cachedCurrencySymbol = symbol
+}
+
+export function clearCurrencySymbol() {
+  cachedCurrencySymbol = "BDT"
 }
 
 export function getCurrencySymbol(): string {
   return cachedCurrencySymbol
 }
-
-// For backward compatibility - deprecated, use getCurrencySymbol()
-export const currencySymbol = "BDT"

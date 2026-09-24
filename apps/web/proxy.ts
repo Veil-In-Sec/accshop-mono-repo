@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-const COOKIE_NAME = "admin_session"
+import { ADMIN_COOKIE_NAME, adminTokenPayload, safeEqualHex } from "@/lib/admin-token"
 
 async function expectedToken() {
   const secret = process.env.BETTER_AUTH_SECRET
@@ -17,24 +17,17 @@ async function expectedToken() {
   const signature = await crypto.subtle.sign(
     "HMAC",
     key,
-    new TextEncoder().encode(`admin:${password}`),
+    new TextEncoder().encode(adminTokenPayload(password)),
   )
   return Array.from(new Uint8Array(signature))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("")
 }
 
-function safeEqualHex(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = await expectedToken()
-  const presented = request.cookies.get(COOKIE_NAME)?.value
+  const presented = request.cookies.get(ADMIN_COOKIE_NAME)?.value
   const authed = Boolean(token && presented && safeEqualHex(presented, token!))
 
   if (pathname === "/admin/login") {

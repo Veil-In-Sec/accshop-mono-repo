@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { MotionConfig } from "motion/react"
-import { useReducedMotion } from "@/lib/useReducedMotion"
+import { MotionConfig, useReducedMotion } from "motion/react"
 
 export function MotionProvider({ children }: { children: React.ReactNode }) {
   const reduced = useReducedMotion()

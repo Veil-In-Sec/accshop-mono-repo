@@ -4,21 +4,9 @@ import useSWR from "swr"
 
 import { authClient } from "@/lib/auth-client"
 import { getWalletData } from "@/app/actions/wallet"
+import type { Order } from "@/lib/api/types"
 
-export interface Order {
-  id: string
-  productName: string
-  tag?: string
-  price: number
-  quantity: number
-  deliveredEmail: string
-  deliveredPassword: string
-  deliveredRefreshToken: string
-  deliveredClientId: string
-  deliveredCredentials: string
-  status?: "pending" | "processing" | "completed" | "failed"
-  purchasedAt: string
-}
+export type { Order }
 
 export interface Transaction {
   id: string

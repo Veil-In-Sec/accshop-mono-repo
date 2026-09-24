@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import Lenis from "lenis"
-import { useReducedMotion } from "@/lib/useReducedMotion"
+import { useReducedMotion } from "motion/react"
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
-  const reduced = useReducedMotion()
+  const shouldReduce = useReducedMotion()
+  const reduced = Boolean(shouldReduce)
 
   React.useEffect(() => {
     if (reduced) return

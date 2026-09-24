@@ -11,8 +11,9 @@ export class ApiError extends Error {
 }
 
 /**
- * Server-only base URL for the NestJS API. Never import this from client
- * components — the client must use same-origin /api/* (rewrites proxy).
+ * Server-only base URL for the merged Next.js API (same app, app/api/*).
+ * Never import this from client components — the client must use
+ * same-origin /api/* directly.
  */
 export function apiBaseUrl() {
   if (typeof window !== "undefined") {
@@ -21,7 +22,7 @@ export function apiBaseUrl() {
   return (
     process.env.API_SERVER_URL ??
     process.env.API_URL ??
-    "http://127.0.0.1:4000"
+    "http://127.0.0.1:3000"
   )
 }
 

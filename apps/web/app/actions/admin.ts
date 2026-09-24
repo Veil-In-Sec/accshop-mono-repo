@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { serverApi } from "@/lib/api/endpoints"
 import { clearAdminSession, createAdminSession } from "@/lib/admin-auth"
+import { isFail, withAction } from "@/lib/action"
 
 export async function adminLogin(password: string) {
   const result = await serverApi.admin.login(password)
@@ -136,36 +137,6 @@ export async function getAdminSettings() {
 }
 
 import { clearCurrencySymbolCache } from "@/lib/use-currency"
-import { headers } from "next/headers"
-
-async function adminFetch<T>(path: string, init: RequestInit = {}): Promise<any> {
-  const headersList = await headers()
-  const cookieHeader = headersList.get("cookie")
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
-  const res = await fetch(`${apiUrl}/api/admin${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers ?? {}),
-      ...(cookieHeader ? { cookie: cookieHeader } : {}),
-    },
-    cache: "no-store",
-  })
-
-  if (!res.ok) {
-    let message = res.statusText
-    let body: unknown
-    try {
-      body = await res.json()
-      message = (body as { message?: string })?.message ?? message
-    } catch {
-      /* ignore non-JSON error bodies */
-    }
-    throw new Error(`${message} (${res.status})`)
-  }
-
-  return (await res.json())
-}
 
 export async function updateAdminSettings(input: {
   currencySymbol: string
@@ -268,57 +239,48 @@ export async function getProcessingOrdersCount() {
 export async function getHotmailBalance(): Promise<
   { ok: true; balance: number; email?: string } | { ok: false; message: string }
 > {
-  try {
-    const data = await serverApi.admin.hotmail143.balance()
-    return { ok: true, balance: data.balance, email: data.email }
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Could not fetch balance." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.hotmail143.balance(),
+    "Could not fetch balance.",
+  )
+  if (isFail(res)) return res
+  return { ok: true, balance: res.balance, email: res.email }
 }
 
 export async function getHotmailStock(): Promise<
   { ok: true; data: Record<string, unknown> } | { ok: false; message: string }
 > {
-  try {
-    const data = await serverApi.admin.hotmail143.stock()
-    return { ok: true, data: data.data }
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Could not fetch stock." }
-  }
+  const res = await withAction(() => serverApi.admin.hotmail143.stock(), "Could not fetch stock.")
+  if (isFail(res)) return res
+  return { ok: true, data: res.data }
 }
 
 export async function updateHotmailConfig(input: { apiKey?: string; baseUrl?: string }) {
-  try {
-    const result = await serverApi.admin.hotmail143.config(input)
-    revalidatePath("/admin/settings")
-    revalidatePath("/admin/products")
-    return result
-  } catch (e) {
-    return {
-      success: false,
-      message: e instanceof Error ? e.message : "Could not save Hotmail143 config.",
-    }
-  }
+  const res = await withAction(
+    () => serverApi.admin.hotmail143.config(input),
+    "Could not save Hotmail143 config.",
+  )
+  if (isFail(res)) return { success: false, message: res.message }
+  revalidatePath("/admin/settings")
+  revalidatePath("/admin/products")
+  return res
 }
 
 export async function getHotmailProducts() {
-  try {
-    const data = await serverApi.admin.hotmail143.products()
-    return { ok: true as const, products: data }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not fetch products." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.hotmail143.products(),
+    "Could not fetch products.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  return { ok: true as const, products: res }
 }
 
 export async function getBulkmailBalance(): Promise<
   { ok: true; balance: number; balanceUsd?: number; email?: string; currency?: string; rate?: number; rateSource?: string } | { ok: false; message: string }
 > {
-  try {
-    const data = await serverApi.admin.bulkmail.balance()
-    return { ok: true, balance: data.balance, balanceUsd: data.balanceUsd, email: data.email, currency: data.currency, rate: data.rate, rateSource: data.rateSource }
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Could not fetch balance." }
-  }
+  const res = await withAction(() => serverApi.admin.bulkmail.balance(), "Could not fetch balance.")
+  if (isFail(res)) return res
+  return { ok: true, balance: res.balance, balanceUsd: res.balanceUsd, email: res.email, currency: res.currency, rate: res.rate, rateSource: res.rateSource }
 }
 
 /** Effective USD → local rate (live internet rate, flat value, or manual fallback). */
@@ -338,52 +300,40 @@ export async function getFxRate(): Promise<{ rate: number; source: string; liveE
 
 /** Switches the USD → local rate between live internet rate and the flat value. */
 export async function updateFxMode(live: boolean) {
-  try {
-    const result = await serverApi.admin.fx.mode(live)
-    revalidatePath("/admin/settings")
-    revalidatePath("/admin/products")
-    revalidatePath("/admin")
-    return result
-  } catch (e) {
-    return {
-      success: false,
-      message: e instanceof Error ? e.message : "Could not switch rate mode.",
-    }
-  }
+  const res = await withAction(() => serverApi.admin.fx.mode(live), "Could not switch rate mode.")
+  if (isFail(res)) return { success: false, message: res.message }
+  revalidatePath("/admin/settings")
+  revalidatePath("/admin/products")
+  revalidatePath("/admin")
+  return res
 }
 
 export async function getBulkmailStock(): Promise<
   { ok: true; data: unknown } | { ok: false; message: string }
 > {
-  try {
-    const data = await serverApi.admin.bulkmail.stock()
-    return { ok: true, data }
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Could not fetch stock." }
-  }
+  const res = await withAction(() => serverApi.admin.bulkmail.stock(), "Could not fetch stock.")
+  if (isFail(res)) return res
+  return { ok: true, data: res }
 }
 
 export async function updateBulkmailConfig(input: { apiKey?: string; baseUrl?: string }) {
-  try {
-    const result = await serverApi.admin.bulkmail.config(input)
-    revalidatePath("/admin/settings")
-    revalidatePath("/admin/products")
-    return result
-  } catch (e) {
-    return {
-      success: false,
-      message: e instanceof Error ? e.message : "Could not save BulkMail config.",
-    }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.config(input),
+    "Could not save BulkMail config.",
+  )
+  if (isFail(res)) return { success: false, message: res.message }
+  revalidatePath("/admin/settings")
+  revalidatePath("/admin/products")
+  return res
 }
 
 export async function getBulkmailProducts() {
-  try {
-    const data = await serverApi.admin.bulkmail.products()
-    return { ok: true as const, products: data }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not fetch products." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.products(),
+    "Could not fetch products.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  return { ok: true as const, products: res }
 }
 
 export async function getBulkmailCatalog(params?: {
@@ -394,58 +344,58 @@ export async function getBulkmailCatalog(params?: {
   sort?: string
   order?: string
 }) {
-  try {
-    const data = await serverApi.admin.bulkmail.catalog(params)
-    return { ok: true as const, ...data }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not fetch catalog." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.catalog(params),
+    "Could not fetch catalog.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  return { ok: true as const, ...res }
 }
 
 export async function getBulkmailCatalogProduct(id: number) {
-  try {
-    const data = await serverApi.admin.bulkmail.catalogProduct(id)
-    return { ok: true as const, ...data }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not fetch product details." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.catalogProduct(id),
+    "Could not fetch product details.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  return { ok: true as const, ...res }
 }
 
 export async function listBulkmailOrders(params?: { page?: number; perPage?: number; status?: string }) {
-  try {
-    const data = await serverApi.admin.bulkmail.orders.list(params)
-    return { ok: true as const, ...data }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not fetch supplier orders." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.orders.list(params),
+    "Could not fetch supplier orders.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  return { ok: true as const, ...res }
 }
 
 export async function getBulkmailOrder(id: number) {
-  try {
-    const data = await serverApi.admin.bulkmail.orders.get(id)
-    return { ok: true as const, ...data }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not fetch supplier order." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.orders.get(id),
+    "Could not fetch supplier order.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  return { ok: true as const, ...res }
 }
 
 export async function cancelBulkmailOrder(id: number) {
-  try {
-    const result = await serverApi.admin.bulkmail.orders.cancel(id)
-    revalidatePath("/admin/orders")
-    return { ok: true as const, ...result }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not cancel supplier order." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.orders.cancel(id),
+    "Could not cancel supplier order.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  revalidatePath("/admin/orders")
+  return { ok: true as const, ...res }
 }
 
 export async function exportBulkmailOrder(id: number, format: "txt" | "csv" | "json" = "txt") {
-  try {
-    const data = await serverApi.admin.bulkmail.orders.export(id, format)
-    return { ok: true as const, ...data }
-  } catch (e) {
-    return { ok: false as const, message: e instanceof Error ? e.message : "Could not export supplier order." }
-  }
+  const res = await withAction(
+    () => serverApi.admin.bulkmail.orders.export(id, format),
+    "Could not export supplier order.",
+  )
+  if (isFail(res)) return { ok: false as const, message: res.message }
+  return { ok: true as const, ...res }
 }
 
 export async function getRecentActivity(limit = 8) {

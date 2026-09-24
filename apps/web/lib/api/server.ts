@@ -1,13 +1,17 @@
 import { ApiError, apiUrl } from "./http"
 
 /**
- * Server-side fetch to the NestJS API. Forwards the incoming request cookies
- * (user session + admin session) so guarded endpoints authenticate correctly.
+ * Server-side fetch to the merged Next.js API (same app, app/api/*).
+ * Forwards the incoming request cookies (user session + admin session)
+ * so guarded endpoints authenticate correctly.
  */
-async function buildHeaders(init: RequestInit): Promise<HeadersInit> {
-  const { cookies } = await import("next/headers")
-  const store = await cookies()
-  const cookieHeader = store.toString()
+async function buildHeaders(init: RequestInit, forwardCookies: boolean): Promise<HeadersInit> {
+  let cookieHeader = ""
+  if (forwardCookies) {
+    const { cookies } = await import("next/headers")
+    const store = await cookies()
+    cookieHeader = store.toString()
+  }
   return {
     "Content-Type": "application/json",
     ...(init.headers ?? {}),
@@ -15,61 +19,43 @@ async function buildHeaders(init: RequestInit): Promise<HeadersInit> {
   }
 }
 
-/**
- * Public fetch that doesn't forward cookies - for public endpoints.
- */
-async function buildPublicHeaders(init: RequestInit): Promise<HeadersInit> {
-  return {
-    "Content-Type": "application/json",
-    ...(init.headers ?? {}),
+async function throwApiError(res: Response): Promise<never> {
+  let message = res.statusText
+  let body: unknown
+  try {
+    body = await res.json()
+    message = (body as { message?: string })?.message ?? message
+  } catch {
+    /* ignore non-JSON error bodies */
   }
+  throw new ApiError(res.status, message, body)
 }
 
-export async function serverFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function fetchApi<T>(
+  path: string,
+  init: RequestInit = {},
+  forwardCookies: boolean,
+): Promise<T> {
   const res = await fetch(apiUrl(path), {
     ...init,
-    headers: await buildHeaders(init),
+    headers: await buildHeaders(init, forwardCookies),
     cache: "no-store",
   })
 
-  if (!res.ok) {
-    let message = res.statusText
-    let body: unknown
-    try {
-      body = await res.json()
-      message = (body as { message?: string })?.message ?? message
-    } catch {
-      /* ignore non-JSON error bodies */
-    }
-    throw new ApiError(res.status, message, body)
-  }
+  if (!res.ok) await throwApiError(res)
 
   return (await res.json()) as T
+}
+
+export async function serverFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return fetchApi<T>(path, init, true)
 }
 
 /**
  * Public fetch that doesn't forward cookies - for public endpoints.
  */
 export async function publicFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(apiUrl(path), {
-    ...init,
-    headers: await buildPublicHeaders(init),
-    cache: "no-store",
-  })
-
-  if (!res.ok) {
-    let message = res.statusText
-    let body: unknown
-    try {
-      body = await res.json()
-      message = (body as { message?: string })?.message ?? message
-    } catch {
-      /* ignore non-JSON error bodies */
-    }
-    throw new ApiError(res.status, message, body)
-  }
-
-  return (await res.json()) as T
+  return fetchApi<T>(path, init, false)
 }
 
 /** Like serverFetch but returns the raw Response (e.g. to inspect Set-Cookie). */
@@ -77,19 +63,11 @@ export async function serverFetchResponse(
   path: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  const { cookies } = await import("next/headers")
-  const store = await cookies()
-  const cookieHeader = store.toString()
-  const res = await fetch(apiUrl(path), {
+  return fetch(apiUrl(path), {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers ?? {}),
-      ...(cookieHeader ? { cookie: cookieHeader } : {}),
-    },
+    headers: await buildHeaders(init, true),
     cache: "no-store",
   })
-  return res
 }
 
 /**
@@ -111,10 +89,11 @@ export async function forwardSetCookies(res: Response) {
   for (const sc of setCookies) {
     const parts = sc.split(";").map((s) => s.trim())
     const [pair, ...attrs] = parts
+    if (!pair) continue
     const eq = pair.indexOf("=")
     if (eq === -1) continue
-    const name = pair.slice(0, eq)
-    if (eq === -1) continue
+    const name = pair.slice(0, eq).trim()
+    if (!name) continue
     const value = pair.slice(eq + 1)
     const options: {
       path: string

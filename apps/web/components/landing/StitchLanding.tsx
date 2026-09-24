@@ -104,8 +104,8 @@ export function StitchLanding({ settings, features, faqs, testimonials }: Props)
   const teamStat1Label = pick(settings?.teamStat1Label, "Average Support Response Time")
   const teamStat2Value = pick(settings?.teamStat2Value, "100% Human")
   const teamStat2Label = pick(settings?.teamStat2Label, "Dedicated Account Engineers")
-  const rawTeamImage = pick(settings?.teamImageUrl, "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80")
-  const teamImageUrl = /^https?:\/\//i.test(rawTeamImage) ? rawTeamImage : "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
+  const rawTeamImage = pick(settings?.teamImageUrl, "/accshop-logo.svg")
+  const teamImageUrl = /^(\/|https?:\/\/)/i.test(rawTeamImage) ? rawTeamImage : "/accshop-logo.svg"
   const testimonialsTitle = pick(settings?.testimonialsTitle, "Trusted by 3,000+ Growth Teams")
   const testimonialsSubtitle = pick(settings?.testimonialsSubtitle, "Authentic stories from scaling agencies, SaaS founders, and outreach leaders.")
   const faqTitle = pick(settings?.faqTitle, "FAQ")
@@ -201,12 +201,12 @@ export function StitchLanding({ settings, features, faqs, testimonials }: Props)
   ]
   const displayFeatures = features && features.length > 0 ? features.map((f) => ({ icon: f.icon, title: f.title, description: f.description })) : defaultFeatures
   const defaultTestimonials: Array<{ stars: number; tag: string; quote: string; name: string; role: string; avatar: string }> = [
-    { stars: 5, tag: "Cold Outreach", quote: "Game-changer for our outbound campaigns. The Outlook accounts were warmed cleanly with pristine IP histories. We hit 84% inbox placement from day one.", name: "Sarah K.", role: "Lead Generation Specialist, RevScale", avatar: "https://randomuser.me/api/portraits/women/68.jpg" },
-    { stars: 5, tag: "Growth Ops", quote: "Exceptional speed and customer care! When one mailbox tripped an unexpected 2FA flag at 2 AM, support replaced it in 8 minutes flat.", name: "Messa B.", role: "Growth Marketing Director, HyperFunnel", avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
-    { stars: 5, tag: "SaaS Founder", quote: "AccShop completely saved our automated pipeline. Getting 500+ tested Gmail and Outlook seats instantly via API cut our onboarding time by weeks.", name: "Elena R.", role: "Founder & CEO, MetricPulse", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
-    { stars: 5, tag: "QA Engineering", quote: "Our test automation suites require fresh, deterministic credentials every cycle. Zero recycled accounts are unparalleled.", name: "David P.", role: "QA Automation Lead, CloudGrid", avatar: "https://randomuser.me/api/portraits/men/76.jpg" },
-    { stars: 5, tag: "E-Commerce", quote: "Managing multiple storefront notifications was a nightmare before AccShop. Reliable, cleanly segregated accounts with zero headaches.", name: "Marcus T.", role: "E-commerce Director, OmniBrands", avatar: "https://randomuser.me/api/portraits/men/12.jpg" },
-    { stars: 5, tag: "Agency Lead", quote: "The 48-hour warranty gives us peace of mind. We buy in batches of 200+ monthly; deliverability is rock-solid.", name: "Julian V.", role: "Managing Partner, Apex Outreach", avatar: "https://randomuser.me/api/portraits/men/65.jpg" },
+    { stars: 5, tag: "Cold Outreach", quote: "Game-changer for our outbound campaigns. The Outlook accounts were warmed cleanly with pristine IP histories. We hit 84% inbox placement from day one.", name: "Sarah K.", role: "Lead Generation Specialist, RevScale", avatar: "" },
+    { stars: 5, tag: "Growth Ops", quote: "Exceptional speed and customer care! When one mailbox tripped an unexpected 2FA flag at 2 AM, support replaced it in 8 minutes flat.", name: "Messa B.", role: "Growth Marketing Director, HyperFunnel", avatar: "" },
+    { stars: 5, tag: "SaaS Founder", quote: "AccShop completely saved our automated pipeline. Getting 500+ tested Gmail and Outlook seats instantly via API cut our onboarding time by weeks.", name: "Elena R.", role: "Founder & CEO, MetricPulse", avatar: "" },
+    { stars: 5, tag: "QA Engineering", quote: "Our test automation suites require fresh, deterministic credentials every cycle. Zero recycled accounts are unparalleled.", name: "David P.", role: "QA Automation Lead, CloudGrid", avatar: "" },
+    { stars: 5, tag: "E-Commerce", quote: "Managing multiple storefront notifications was a nightmare before AccShop. Reliable, cleanly segregated accounts with zero headaches.", name: "Marcus T.", role: "E-commerce Director, OmniBrands", avatar: "" },
+    { stars: 5, tag: "Agency Lead", quote: "The 48-hour warranty gives us peace of mind. We buy in batches of 200+ monthly; deliverability is rock-solid.", name: "Julian V.", role: "Managing Partner, Apex Outreach", avatar: "" },
   ]
   const displayTestimonials = testimonials && testimonials.length > 0 ? testimonials : defaultTestimonials
   const displayFaqs = faqs && faqs.length > 0 ? faqs : [

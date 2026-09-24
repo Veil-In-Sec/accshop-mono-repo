@@ -1,9 +1,6 @@
 "use server"
 
-import { cookies } from "next/headers"
 import { serverFetch } from "@/lib/api/server"
-
-const API_BASE = process.env.API_SERVER_URL ?? process.env.API_URL ?? "http://127.0.0.1:4000"
 
 export async function purchaseOrder(data: {
   productId: number

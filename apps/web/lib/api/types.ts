@@ -87,22 +87,24 @@ export interface Testimonial {
   sortOrder: number
 }
 
+export interface Order {
+  id: string
+  productName: string
+  tag?: string
+  price: number
+  quantity?: number
+  deliveredEmail: string
+  deliveredPassword: string
+  deliveredRefreshToken?: string
+  deliveredClientId?: string
+  deliveredCredentials?: string
+  status?: "pending" | "processing" | "completed" | "failed"
+  purchasedAt: string
+}
+
 export interface WalletData {
   balance: number;
-  orders: Array<{
-    id: string
-    productName: string
-    tag?: string
-    price: number
-    quantity?: number
-    deliveredEmail: string
-    deliveredPassword: string
-    deliveredRefreshToken?: string
-    deliveredClientId?: string
-    deliveredCredentials?: string
-    status?: "pending" | "processing" | "completed" | "failed"
-    purchasedAt: string
-  }>
+  orders: Order[]
   transactions: Array<{
     id: string
     type: "deposit" | "purchase" | "refund" | "referral" | "transfer"
@@ -386,17 +388,8 @@ export interface AdminOrder {
   deliveredCredentials: string
 }
 
-export interface AdminSettings {
-  currencySymbol: string
-  usdToLocalRate: number
-  minDepositUsd: number
-  minTransferAmount: number
+export interface AdminSettings extends Settings {
   initialBalance: number
-  siteName: string
-  supportUrl: string
-  heroTitle: string
-  heroSubtitle: string
-  footerText: string
   hotmailApiKey: string
   hotmailApiBaseUrl: string
   bulkmailApiKey?: string
@@ -441,14 +434,7 @@ export interface AdminSettings {
   contactSalesEmail: string
 }
 
-export interface AdminPaymentMethod {
-  id: number
-  name: string
-  type: string
-  accountNumber: string
-  accountName: string
-  instructions: string
-  icon: string
+export interface AdminPaymentMethod extends PaymentMethod {
   enabled: boolean
   sortOrder: number
 }
@@ -535,16 +521,7 @@ export interface AdminDepositRequest {
   reviewedAt: string | null
 }
 
-export interface PurchaseOrder {
-  id: string
-  productName: string
-  tag?: string
-  price: number
-  deliveredEmail: string
-  deliveredPassword: string
-  status?: string
-  purchasedAt: string
-}
+export interface PurchaseOrder extends Order {}
 
 export interface PurchaseResult {
   success: true
@@ -581,11 +558,44 @@ export interface HotmailCodeResponse {
 }
 
 /**
+ * Normalized GraphMail result returned by the GraphMail-backed
+ * POST /verification-codes/hotmail (`kind: "graph"`) and
+ * GET /verification-codes/outlook endpoints.
+ * Shape mirrors HotmailCodeResponse so the dashboard retry UX
+ * (`shouldRetry` + `retryAfter`) keeps working.
+ */
+export interface GraphMailMessage {
+  uid?: number
+  date?: string
+  from?: Array<{ name?: string; address?: string }>
+  subject?: string
+  code?: string
+  message?: string
+}
+
+export interface GraphCodeResponse {
+  successful: boolean
+  code: number
+  msg: string
+  timestamp?: number
+  data: {
+    code: string | null
+    email?: string
+    messages?: GraphMailMessage[]
+    latest?: GraphMailMessage | null
+    retryAfter?: number
+    shouldRetry?: boolean
+  } | null
+}
+
+/**
  * Discriminated envelope returned by POST /verification-codes/hotmail.
- * `hotmail` = looked up via Hotmail143 `hotmail-code` (full 4-part line),
- * `outlook` = looked up via Hotmail143 `outlook-code` (email-only line).
+ * `graph` = looked up via GraphMail `graph_messages` (full credentials line
+ * or stored refresh_token + client_id). `hotmail` / `outlook` are legacy
+ * Hotmail143 envelopes kept for backward compatibility.
  */
 export type HotmailLookupResponse =
+  | { kind: "graph"; result: GraphCodeResponse }
   | { kind: "hotmail"; result: HotmailCodeResponse }
   | { kind: "outlook"; result: OutlookCodeResponse }
 

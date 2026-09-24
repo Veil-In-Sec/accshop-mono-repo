@@ -18,7 +18,7 @@ const _jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://107.172.127.198:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   title: 'Buy Hotmail & Gmail Accounts – Instant Delivery | AccShop',
   description:
     'Buy verified Hotmail, Outlook & Gmail accounts with instant delivery, 48-hour warranty and 24/7 human support. No personal data required. Shop now.',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
       'Buy verified Hotmail, Outlook & Gmail accounts with instant delivery, 48-hour warranty and 24/7 human support. No personal data required. Shop now.',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=1200&q=80',
+        url: '/accshop-icon.svg',
         width: 1200,
         height: 630,
         alt: 'AccShop — verified Hotmail, Outlook and Gmail accounts with instant delivery',
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     description:
       'Buy verified Hotmail, Outlook & Gmail accounts with instant delivery, 48-hour warranty and 24/7 human support. No personal data required. Shop now.',
     images: [
-      'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=1200&q=80',
+      '/accshop-icon.svg',
     ],
   },
   icons: {
@@ -69,8 +69,8 @@ const orgSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'AccShop',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://107.172.127.198:3000',
-  logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://107.172.127.198:3000'}/accshop-icon.svg`,
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/accshop-icon.svg`,
   sameAs: [],
   contactPoint: [
     {
@@ -85,7 +85,7 @@ const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'AccShop',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://107.172.127.198:3000',
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
 }
 
 export const viewport: Viewport = {

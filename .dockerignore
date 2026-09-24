@@ -1,0 +1,19 @@
+# Production deploy: exclude dev/agent bloat, prototypes, and local envs.
+node_modules
+.next
+dist
+.git
+.github
+.agents
+.claude
+.opencode
+agent
+DESIGN.md
+skills-lock.json
+apps/web/public/glass.html
+apps/web/public/placeholder-*
+*.log
+.env
+.env.local
+apps/*/.env
+apps/*/.env.local

@@ -2,17 +2,22 @@
 
 import useSWR from "swr"
 import { serverApi } from "@/lib/api/endpoints"
-
-let cachedSymbol: string | null = null
+import {
+  getCurrencySymbol as getCachedSymbol,
+  setCurrencySymbol as setCachedSymbol,
+  clearCurrencySymbol,
+} from "@/lib/products"
 
 export function useCurrencySymbol() {
   const { data, isLoading } = useSWR(
     "currency-symbol",
     async () => {
-      if (cachedSymbol) return cachedSymbol
+      const cached = getCachedSymbol()
+      if (cached !== "BDT") return cached
       const settings = await serverApi.settings.getPublic()
-      cachedSymbol = settings?.currencySymbol ?? "BDT"
-      return cachedSymbol
+      const symbol = settings?.currencySymbol ?? "BDT"
+      setCachedSymbol(symbol)
+      return symbol
     },
     {
       fallbackData: "BDT",
@@ -24,10 +29,5 @@ export function useCurrencySymbol() {
   return { currencySymbol: data ?? "BDT", isLoading }
 }
 
-export function clearCurrencySymbolCache() {
-  cachedSymbol = null
-}
-
-export function setCurrencySymbol(symbol: string) {
-  cachedSymbol = symbol
-}
+export { clearCurrencySymbol as clearCurrencySymbolCache }
+export { setCachedSymbol as setCurrencySymbol }

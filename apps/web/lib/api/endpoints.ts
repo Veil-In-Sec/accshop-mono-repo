@@ -6,6 +6,7 @@ import type {
   Faq,
   Testimonial,
   WalletData,
+  Order,
   ActionResult,
   HotmailProductOption,
   BulkMailProductOption,
@@ -34,6 +35,8 @@ import type {
   PurchaseResult,
   OwnedEmail,
   GmailCodeResponse,
+  GraphCodeResponse,
+  GraphMailMessage,
   HotmailCodeResponse,
   HotmailLookupResponse,
   OutlookCodeResponse,
@@ -50,6 +53,7 @@ export type {
   Faq,
   Testimonial,
   WalletData,
+  Order,
   ActionResult,
   HotmailProductOption,
   BulkMailProductOption,
@@ -78,6 +82,8 @@ export type {
   PurchaseResult,
   OwnedEmail,
   GmailCodeResponse,
+  GraphCodeResponse,
+  GraphMailMessage,
   HotmailCodeResponse,
   HotmailLookupResponse,
   OutlookCodeResponse,
@@ -199,7 +205,7 @@ export const serverApi = {
         `/verification-codes/gmail?email=${encodeURIComponent(email)}`,
       ),
     outlook: (email: string) =>
-      serverFetch<OutlookCodeResponse>(
+      serverFetch<GraphCodeResponse>(
         `/verification-codes/outlook?email=${encodeURIComponent(email)}`,
       ),
     hotmail: (data: string) =>

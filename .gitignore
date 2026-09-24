@@ -16,3 +16,7 @@ apps/*/.env.local
 # misc
 .DS_Store
 *.log
+
+# local SSH credentials (private keys, ppk) — never commit.
+# CI uses GitHub Secrets (SSH_PRIVATE_KEY) instead.
+.ssh_credentials/

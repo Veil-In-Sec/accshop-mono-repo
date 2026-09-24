@@ -1,23 +1,23 @@
 /** @type {import('next').NextConfig} */
-const API_ORIGIN = process.env.API_SERVER_URL ?? process.env.API_URL ?? "http://127.0.0.1:4000"
+// Dev origins are env-driven so prod IPs/domains don't leak into the repo.
+// Example: ALLOWED_DEV_ORIGINS="localhost,127.0.0.1,accshop.online"
+const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS ?? "localhost,127.0.0.1")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 const nextConfig = {
+  // HostSeba Node.js app path (SSR + API routes + Server Actions).
+  // Must stay SSR: NO `output: 'export'`. Static export + FTP out/ -> public_html
+  // would delete app/api/* (78 routes), proxy.ts middleware, and Prisma access.
+  // Requires a Node.js server (cPanel Node.js Selector / VPS + PM2).
+  // Single-app merge: API lives in app/api/* locally, no rewrites needed.
   images: {
+    // cPanel shared hosting has no Image Optimization server — keep
+    // unoptimized. On a VPS with `next start` you may set false + remotePatterns.
     unoptimized: true,
   },
-  allowedDevOrigins: ["107.172.127.198", "localhost"],
-  async rewrites() {
-    // Proxy the API through the web origin so the browser only ever talks to
-    // port 3000 (no need to expose 4000 or deal with CORS). Requests to
-    // /api/* are forwarded server-side to the NestJS API.
-    // Destination is env-driven so Docker/prod API hosts keep working.
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${API_ORIGIN}/api/:path*`,
-      },
-    ]
-  },
+  allowedDevOrigins,
   async headers() {
     return [
       {

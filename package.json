@@ -2,25 +2,25 @@
   "name": "accshop-monorepo",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "20.x || 22.x || 24.x",
+    "npm": ">=10"
+  },
   "workspaces": [
-    "apps/api",
     "apps/web"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "npm run dev --workspace @accshop/api",
+    "dev": "npm run dev --workspace @accshop/web",
     "dev:web": "npm run dev --workspace @accshop/web",
-    "build": "npm run build --workspace @accshop/api && npm run build --workspace @accshop/web",
-    "build:api": "npm run build --workspace @accshop/api",
+    "build": "npm run build --workspace @accshop/web",
     "build:web": "npm run build --workspace @accshop/web",
-    "start": "npm run start:api & npm run start:web",
-    "start:api": "npm run start:prod --workspace @accshop/api",
+    "start": "npm run start --workspace @accshop/web",
     "start:web": "npm run start --workspace @accshop/web",
-    "postinstall": "npm run db:generate --workspace @accshop/api",
-    "db:generate": "npm run db:generate --workspace @accshop/api",
-    "db:migrate": "npm run db:migrate --workspace @accshop/api",
-    "db:push": "npm run db:push --workspace @accshop/api",
-    "db:seed": "npm run db:seed --workspace @accshop/api"
+    "postinstall": "npm run db:generate --workspace @accshop/web",
+    "db:generate": "npm run db:generate --workspace @accshop/web",
+    "db:migrate": "npm run db:migrate --workspace @accshop/web",
+    "db:push": "npm run db:push --workspace @accshop/web",
+    "db:seed": "npm run db:seed --workspace @accshop/web"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
