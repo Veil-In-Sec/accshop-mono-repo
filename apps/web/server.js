@@ -18,6 +18,22 @@ process.env.BETTER_AUTH_SECRET ||= "CyfMPYh7xcZlozbDiMNBiVyGFA+QFcOuw1FnVKBVSYs=
 process.env.ADMIN_PASSWORD ||= "AccMcpW6y3TwrfK#25"
 process.env.TOTP_VAULT_KEY ||= "3Esrqvd0azqOvVdsFdbk3ISOnkOu8TbQ9p1rqx164+s="
 
+// Shared hosts often export HTTP(S)_PROXY for outbound traffic, and Node's
+// fetch honors it — routing server-to-self API calls (127.0.0.1) into a
+// filtering proxy that refuses loopback. Exempt loopback explicitly so
+// Server Actions always reach this same process directly.
+{
+  const extras = ["127.0.0.1", "localhost"]
+  const current = (process.env.NO_PROXY ?? process.env.no_proxy ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+  for (const host of extras) if (!current.includes(host)) current.push(host)
+  const merged = current.join(",")
+  process.env.NO_PROXY = merged
+  process.env.no_proxy = merged
+}
+
 const { createServer } = require("http")
 const next = require("next")
 
