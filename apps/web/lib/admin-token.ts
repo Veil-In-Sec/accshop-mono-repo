@@ -24,6 +24,6 @@ export function safeEqualHex(a: string, b: string): boolean {
  */
 export function publicOriginIsHttps(): boolean {
   const site =
-    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? "http://localhost:3000"
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? "https://accshop.online"
   return site.trim().toLowerCase().startsWith("https://")
 }

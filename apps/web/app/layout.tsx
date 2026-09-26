@@ -18,7 +18,7 @@ const _jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online'),
   title: 'Buy Hotmail & Gmail Accounts – Instant Delivery | AccShop',
   description:
     'Buy verified Hotmail, Outlook & Gmail accounts with instant delivery, 48-hour warranty and 24/7 human support. No personal data required. Shop now.',
@@ -69,8 +69,8 @@ const orgSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'AccShop',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
-  logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/accshop-icon.svg`,
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online',
+  logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online'}/accshop-icon.svg`,
   sameAs: [],
   contactPoint: [
     {
@@ -85,7 +85,7 @@ const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'AccShop',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online',
 }
 
 export const viewport: Viewport = {

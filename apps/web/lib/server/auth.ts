@@ -11,11 +11,11 @@ export function normalizedBaseUrl(): string {
   const site =
     process.env.NEXT_PUBLIC_SITE_URL ??
     process.env.BETTER_AUTH_URL ??
-    "http://localhost:3000"
+    "https://accshop.online"
   return site.replace(/\/+$/, "").replace(/\/api\/auth$/, "")
 }
 
-const webOrigins = (process.env.WEB_ORIGINS ?? "http://localhost:3000")
+const webOrigins = (process.env.WEB_ORIGINS ?? "https://accshop.online")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean)
