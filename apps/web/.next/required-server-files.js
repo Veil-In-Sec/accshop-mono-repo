@@ -237,6 +237,12 @@ self.__SERVER_FILES_MANIFEST={
       "turbopackFileSystemCacheForBuild": true,
       "turbopackInferModuleSideEffects": true,
       "turbopackPluginRuntimeStrategy": "childProcesses",
+      "serverActions": {
+        "allowedOrigins": [
+          "accshop.online",
+          "www.accshop.online"
+        ]
+      },
       "turbopackMemoryEvictionMode": "auto",
       "optimizePackageImports": [
         "lucide-react",
