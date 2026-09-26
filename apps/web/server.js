@@ -40,6 +40,11 @@ function listen(port) {
     }
   })
   server.listen(port, hostname, () => {
+    // Record the port THIS process actually bound (matters when the desired
+    // port was taken and we auto-incremented, or when the host assigns ports
+    // dynamically like cPanel Passenger). Server Actions use this for
+    // server-to-self API fetches so they never hit a stale/wrong port.
+    process.env.ACTUAL_PORT = String(port)
     console.log(`[web] AccShop web ready on http://${hostname}:${port}`)
   })
 }

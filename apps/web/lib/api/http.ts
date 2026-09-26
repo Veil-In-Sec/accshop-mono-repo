@@ -23,7 +23,11 @@ export function apiBaseUrl() {
   if (typeof window !== "undefined") {
     throw new Error("apiBaseUrl() is server-only — use same-origin /api/* on the client.")
   }
-  const port = process.env.PORT?.trim()
+  // ACTUAL_PORT is stamped by server.js once listen() succeeds — it is the
+  // port THIS process really bound (correct even after EADDRINUSE retries or
+  // dynamic host assignment). PORT alone can lie when a stale process holds
+  // the desired port.
+  const port = process.env.ACTUAL_PORT?.trim() || process.env.PORT?.trim()
   if (port) return `http://127.0.0.1:${port}`
   return (
     process.env.API_SERVER_URL ??
