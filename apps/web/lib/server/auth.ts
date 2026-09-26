@@ -15,7 +15,9 @@ export function normalizedBaseUrl(): string {
   return site.replace(/\/+$/, "").replace(/\/api\/auth$/, "")
 }
 
-const webOrigins = (process.env.WEB_ORIGINS ?? "https://accshop.online")
+const webOrigins = (
+  process.env.WEB_ORIGINS ?? "https://accshop.online,https://www.accshop.online"
+)
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean)

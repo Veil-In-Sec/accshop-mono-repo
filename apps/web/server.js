@@ -12,7 +12,7 @@ process.env.DATABASE_URL ||= "postgresql://accshopo_shopuser:accshop_mamun@local
 process.env.SHADOW_DATABASE_URL ||= "postgresql://accshopo_shopuser:accshop_mamun@localhost:5432/accshopo_accshop"
 process.env.BETTER_AUTH_URL ||= "https://accshop.online"
 process.env.NEXT_PUBLIC_SITE_URL ||= "https://accshop.online"
-process.env.WEB_ORIGINS ||= "https://accshop.online"
+process.env.WEB_ORIGINS ||= "https://accshop.online,https://www.accshop.online"
 process.env.API_SERVER_URL ||= "http://127.0.0.1:3000"
 process.env.BETTER_AUTH_SECRET ||= "CyfMPYh7xcZlozbDiMNBiVyGFA+QFcOuw1FnVKBVSYs="
 process.env.ADMIN_PASSWORD ||= "AccMcpW6y3TwrfK#25"
