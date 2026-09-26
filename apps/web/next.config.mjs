@@ -18,6 +18,14 @@ const nextConfig = {
     unoptimized: true,
   },
   allowedDevOrigins,
+  experimental: {
+    // Server Actions originate from the browser origin. Behind a reverse
+    // proxy (cPanel Apache/Passenger) the Host seen by Node can differ, so
+    // allowlist the public origins explicitly instead of relying on Host.
+    serverActions: {
+      allowedOrigins: ["accshop.online", "www.accshop.online"],
+    },
+  },
   async headers() {
     return [
       {

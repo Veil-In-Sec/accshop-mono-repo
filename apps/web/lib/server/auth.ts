@@ -25,6 +25,9 @@ const webOrigins = (
 export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
   baseURL: normalizedBaseUrl(),
+  // Behind cPanel's reverse proxy the Host/Proto seen by Node can differ
+  // from the public URL — trust the forwarded headers for origin checks.
+  trustHost: true,
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
