@@ -16,6 +16,8 @@ export function safeEqualHex(a: string, b: string): boolean {
   return diff === 0
 }
 
+import { CONFIG } from "@/lib/config"
+
 /**
  * True only when the public origin is https. Cookie `Secure` (and
  * `SameSite=None`) must follow the URL scheme, NOT NODE_ENV:
@@ -23,7 +25,6 @@ export function safeEqualHex(a: string, b: string): boolean {
  * silently breaks signup/login sessions while dev keeps working.
  */
 export function publicOriginIsHttps(): boolean {
-  const site =
-    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? "https://accshop.online"
+  const site = CONFIG.NEXT_PUBLIC_SITE_URL || CONFIG.BETTER_AUTH_URL
   return site.trim().toLowerCase().startsWith("https://")
 }

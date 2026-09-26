@@ -2,28 +2,10 @@
 // Product catalog is managed from the admin panel (sourced from Hotmail143),
 // so it is intentionally NOT seeded here.
 // Run with: npm run db:seed
+//
+// No .env files are used — the database URL is a hardcoded literal in
+// prisma/schema.prisma, which PrismaClient picks up automatically.
 import { PrismaClient } from "@prisma/client"
-import { existsSync, readFileSync } from "fs"
-import { dirname, join } from "path"
-import { fileURLToPath } from "url"
-
-// Prisma Client does NOT auto-load .env outside Next.js, so load the
-// workspace .env here (no dotenv dependency needed).
-const envPath = join(dirname(fileURLToPath(import.meta.url)), "..", ".env")
-if (existsSync(envPath)) {
-  for (const line of readFileSync(envPath, "utf8").split("\n")) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith("#")) continue
-    const m = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/)
-    if (m && process.env[m[1]] === undefined) {
-      let v = m[2].trim()
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-        v = v.slice(1, -1)
-      }
-      process.env[m[1]] = v
-    }
-  }
-}
 
 const prisma = new PrismaClient()
 

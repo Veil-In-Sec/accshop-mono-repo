@@ -3,6 +3,7 @@ import { Outfit, JetBrains_Mono } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
 import { MotionProvider } from '@/components/motion-provider'
 import { LenisProvider } from '@/components/lenis-provider'
+import { CONFIG } from '@/lib/config'
 import './globals.css'
 
 const outfit = Outfit({
@@ -18,7 +19,7 @@ const _jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online'),
+  metadataBase: new URL(CONFIG.NEXT_PUBLIC_SITE_URL),
   title: 'Buy Hotmail & Gmail Accounts – Instant Delivery | AccShop',
   description:
     'Buy verified Hotmail, Outlook & Gmail accounts with instant delivery, 48-hour warranty and 24/7 human support. No personal data required. Shop now.',
@@ -69,8 +70,8 @@ const orgSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'AccShop',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online',
-  logo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online'}/accshop-icon.svg`,
+  url: CONFIG.NEXT_PUBLIC_SITE_URL,
+  logo: `${CONFIG.NEXT_PUBLIC_SITE_URL}/accshop-icon.svg`,
   sameAs: [],
   contactPoint: [
     {
@@ -85,7 +86,7 @@ const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'AccShop',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online',
+  url: CONFIG.NEXT_PUBLIC_SITE_URL,
 }
 
 export const viewport: Viewport = {

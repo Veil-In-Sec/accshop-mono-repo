@@ -1,7 +1,9 @@
 import type { MetadataRoute } from 'next'
 
+import { CONFIG } from '@/lib/config'
+
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online'
+  const base = CONFIG.NEXT_PUBLIC_SITE_URL
   return {
     rules: [
       {

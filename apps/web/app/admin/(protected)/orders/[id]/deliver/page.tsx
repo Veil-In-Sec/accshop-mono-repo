@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-import { deliverCustomProduct, rejectCustomProduct } from "@/app/actions/admin"
+import { deliverCustomProduct, rejectCustomProduct, getAdminOrder } from "@/app/actions/admin"
 import { ClientDate } from "@/components/client-date"
 import { formatMoney } from "@/lib/format"
 import { Button } from "@/components/ui/button"
@@ -56,13 +56,8 @@ export default function DeliverCustomProductPage() {
 
   const fetchOrder = async () => {
     try {
-      // We can get order details from the orders list
-      const res = await fetch("/api/admin/orders")
-      if (res.ok) {
-        const data = await res.json()
-        const found = data.find((o: any) => o.id === orderId)
-        if (found) setOrder(found)
-      }
+      const found = await getAdminOrder(orderId)
+      if (found) setOrder(found)
     } catch {
       // Ignore
     } finally {

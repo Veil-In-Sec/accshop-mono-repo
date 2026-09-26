@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { serverApi } from "@/lib/api/endpoints"
+import { getSiteSettings } from "@/app/actions/wallet"
 import {
   getCurrencySymbol as getCachedSymbol,
   setCurrencySymbol as setCachedSymbol,
@@ -14,7 +14,7 @@ export function useCurrencySymbol() {
     async () => {
       const cached = getCachedSymbol()
       if (cached !== "BDT") return cached
-      const settings = await serverApi.settings.getPublic()
+      const settings = await getSiteSettings()
       const symbol = settings?.currencySymbol ?? "BDT"
       setCachedSymbol(symbol)
       return symbol

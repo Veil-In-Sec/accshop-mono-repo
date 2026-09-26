@@ -2,6 +2,8 @@ import { createHmac, timingSafeEqual } from "crypto"
 
 import { cookies } from "next/headers"
 
+import { CONFIG } from "@/lib/config"
+
 import { jsonError } from "./auth"
 
 export const ADMIN_COOKIE_NAME = "admin_session"
@@ -14,14 +16,14 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export function signAdminToken(): string {
-  const secret = process.env.BETTER_AUTH_SECRET
+  const secret = CONFIG.BETTER_AUTH_SECRET
   if (!secret) throw new Error("BETTER_AUTH_SECRET is not set")
-  const password = process.env.ADMIN_PASSWORD ?? ""
+  const password = CONFIG.ADMIN_PASSWORD ?? ""
   return createHmac("sha256", secret).update(`admin:${password}`).digest("hex")
 }
 
 export function verifyAdminPassword(password: string): boolean {
-  const expected = process.env.ADMIN_PASSWORD
+  const expected = CONFIG.ADMIN_PASSWORD
   if (!expected) return false
   return safeEqual(password, expected)
 }

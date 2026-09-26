@@ -1,17 +1,18 @@
 import { createHmac, timingSafeEqual } from "crypto"
 import { cookies } from "next/headers"
 
+import { CONFIG } from "@/lib/config"
 import { ADMIN_COOKIE_NAME, adminTokenPayload, publicOriginIsHttps } from "@/lib/admin-token"
 
 function getSecret() {
-  const secret = process.env.BETTER_AUTH_SECRET
+  const secret = CONFIG.BETTER_AUTH_SECRET
   if (!secret) throw new Error("BETTER_AUTH_SECRET is not set")
   return secret
 }
 
 function signToken() {
   const secret = getSecret()
-  const password = process.env.ADMIN_PASSWORD
+  const password = CONFIG.ADMIN_PASSWORD
   // Fail closed: no password configured must never produce a usable token.
   if (!password) throw new Error("ADMIN_PASSWORD is not set")
   return createHmac("sha256", secret).update(adminTokenPayload(password)).digest("hex")
@@ -25,7 +26,7 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export async function verifyAdminPassword(password: string) {
-  const expected = process.env.ADMIN_PASSWORD
+  const expected = CONFIG.ADMIN_PASSWORD
   if (!expected) return false
   return safeEqual(password, expected)
 }

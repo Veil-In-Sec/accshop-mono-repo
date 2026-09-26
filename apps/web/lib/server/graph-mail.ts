@@ -16,13 +16,13 @@
  * code retrieval. Purchasing / balance / stock still go through Hotmail143.
  */
 
+import { CONFIG } from "@/lib/config"
 import { badRequest, fetchWithTimeout, safeJson } from "./upstream"
 
-const DEFAULT_GRAPH_MAIL_URL =
-  process.env.GRAPH_MAIL_API_URL ?? "https://tools.dongvanfb.net/api/graph_code"
+const DEFAULT_GRAPH_MAIL_URL = CONFIG.GRAPH_MAIL_API_URL
 
 export function getGraphMailUrl(): string {
-  const raw = (process.env.GRAPH_MAIL_API_URL ?? DEFAULT_GRAPH_MAIL_URL).trim()
+  const raw = CONFIG.GRAPH_MAIL_API_URL.trim()
   return (raw || DEFAULT_GRAPH_MAIL_URL).replace(/\/+$/, "")
 }
 

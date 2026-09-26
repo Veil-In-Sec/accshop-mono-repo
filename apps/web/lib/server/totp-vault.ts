@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto"
 
+import { CONFIG } from "@/lib/config"
 import { HttpError, badRequest } from "./upstream"
 
 const PREFIX = "v1"
@@ -19,12 +20,12 @@ let cachedKey: Buffer | null = null
 
 function resolveVaultKey(): Buffer {
   if (cachedKey) return cachedKey
-  const hex = process.env.TOTP_VAULT_KEY?.trim()
+  const hex = CONFIG.TOTP_VAULT_KEY?.trim()
   if (hex && /^[0-9a-fA-F]{64}$/.test(hex)) {
     cachedKey = Buffer.from(hex, "hex")
     return cachedKey
   }
-  const secret = process.env.BETTER_AUTH_SECRET
+  const secret = CONFIG.BETTER_AUTH_SECRET
   if (!secret) {
     throw new HttpError(500, "TOTP vault is not configured.")
   }

@@ -1,7 +1,9 @@
 import type { MetadataRoute } from 'next'
 
+import { CONFIG } from '@/lib/config'
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accshop.online'
+  const base = CONFIG.NEXT_PUBLIC_SITE_URL
   const now = new Date()
   return [
     { url: `${base}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },

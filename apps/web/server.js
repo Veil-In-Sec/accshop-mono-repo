@@ -4,36 +4,11 @@
 //
 // cPanel setup: App Root = accshop-mono-repo/apps/web, Startup File = server.js
 //
-// Zero-config production defaults for accshop.online: every required env var
-// falls back to a working value below, so the app boots with NO .env file
-// and NO cPanel env-var setup. Explicit env vars (cPanel UI / .env) always
-// win over these defaults.
-process.env.DATABASE_URL ||= "postgresql://accshopo_shopuser:accshop_mamun@localhost:5432/accshopo_accshop"
-process.env.SHADOW_DATABASE_URL ||= "postgresql://accshopo_shopuser:accshop_mamun@localhost:5432/accshopo_accshop"
-process.env.BETTER_AUTH_URL ||= "https://accshop.online"
-process.env.NEXT_PUBLIC_SITE_URL ||= "https://accshop.online"
-process.env.WEB_ORIGINS ||= "https://accshop.online,https://www.accshop.online"
-process.env.API_SERVER_URL ||= "http://127.0.0.1:3000"
-process.env.BETTER_AUTH_SECRET ||= "CyfMPYh7xcZlozbDiMNBiVyGFA+QFcOuw1FnVKBVSYs="
-process.env.ADMIN_PASSWORD ||= "AccMcpW6y3TwrfK#25"
-process.env.TOTP_VAULT_KEY ||= "3Esrqvd0azqOvVdsFdbk3ISOnkOu8TbQ9p1rqx164+s="
-
-// Shared hosts often export HTTP(S)_PROXY for outbound traffic, and Node's
-// fetch honors it — routing server-to-self API calls (127.0.0.1) into a
-// filtering proxy that refuses loopback. Exempt loopback explicitly so
-// Server Actions always reach this same process directly.
-{
-  const extras = ["127.0.0.1", "localhost"]
-  const current = (process.env.NO_PROXY ?? process.env.no_proxy ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-  for (const host of extras) if (!current.includes(host)) current.push(host)
-  const merged = current.join(",")
-  process.env.NO_PROXY = merged
-  process.env.no_proxy = merged
-}
-
+// Server-Actions-only app: NO app/api/* routes, NO .env files. All
+// configuration is hardcoded (prisma/schema.prisma datasource URL,
+// lib/config.ts constants, better-auth `secret` option). Nothing reads
+// environment secrets — PORT/HOSTNAME/NODE_ENV below are host-provided
+// runtime values (cPanel/PM2 assign the port dynamically), not app config.
 const { createServer } = require("http")
 const next = require("next")
 
@@ -56,11 +31,6 @@ function listen(port) {
     }
   })
   server.listen(port, hostname, () => {
-    // Record the port THIS process actually bound (matters when the desired
-    // port was taken and we auto-incremented, or when the host assigns ports
-    // dynamically like cPanel Passenger). Server Actions use this for
-    // server-to-self API fetches so they never hit a stale/wrong port.
-    process.env.ACTUAL_PORT = String(port)
     console.log(`[web] AccShop web ready on http://${hostname}:${port}`)
   })
 }

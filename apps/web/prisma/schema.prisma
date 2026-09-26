@@ -8,7 +8,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Hardcoded connection — no .env files are used (mirrors lib/config.ts).
+  // cPanel production database. Edit the URL here AND in lib/config.ts
+  // to point at a different database.
+  url      = "postgresql://accshopo_shopuser:accshop_mamun@localhost:5432/accshopo_accshop"
 }
 
 // --- Better Auth required tables ---------------------------------------------

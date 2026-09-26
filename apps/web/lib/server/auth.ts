@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 
+import { CONFIG } from "@/lib/config"
 import { publicOriginIsHttps } from "@/lib/admin-token"
 
 import { db } from "./db"
@@ -8,22 +9,18 @@ import { db } from "./db"
 export function normalizedBaseUrl(): string {
   // In the merged app auth lives on the same origin: /api/auth.
   // better-auth baseURL must be the origin without the /api/auth suffix.
-  const site =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    process.env.BETTER_AUTH_URL ??
-    "https://accshop.online"
+  const site = CONFIG.NEXT_PUBLIC_SITE_URL || CONFIG.BETTER_AUTH_URL
   return site.replace(/\/+$/, "").replace(/\/api\/auth$/, "")
 }
 
-const webOrigins = (
-  process.env.WEB_ORIGINS ?? "https://accshop.online,https://www.accshop.online"
-)
-  .split(",")
+const webOrigins = CONFIG.WEB_ORIGINS.split(",")
   .map((o) => o.trim())
   .filter(Boolean)
 
 export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
+  // Hardcoded secret — no BETTER_AUTH_SECRET env var needed.
+  secret: CONFIG.BETTER_AUTH_SECRET,
   baseURL: normalizedBaseUrl(),
   // Behind cPanel's reverse proxy the Host/Proto seen by Node can differ
   // from the public URL — trust the forwarded headers for origin checks.

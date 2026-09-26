@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { CONFIG } from "@/lib/config"
 import { ADMIN_COOKIE_NAME, adminTokenPayload, safeEqualHex } from "@/lib/admin-token"
 
 async function expectedToken() {
-  const secret = process.env.BETTER_AUTH_SECRET
-  const password = process.env.ADMIN_PASSWORD
+  const secret = CONFIG.BETTER_AUTH_SECRET
+  const password = CONFIG.ADMIN_PASSWORD
   // Fail closed: missing secrets must never authenticate.
   if (!secret || !password) return null
   const key = await crypto.subtle.importKey(
