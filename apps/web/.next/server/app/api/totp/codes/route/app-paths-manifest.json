@@ -1,0 +1,3 @@
+{
+  "/api/totp/codes/route": "app/api/totp/codes/route.js"
+}

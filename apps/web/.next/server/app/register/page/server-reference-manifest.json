@@ -1,0 +1,27 @@
+{
+  "node": {
+    "00365c7a3f87f06679aec7f800c8c56c1201cb689c": {
+      "workers": {
+        "app/register/page": {
+          "moduleId": 46902,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "initializeAccount",
+      "filename": "apps/web/app/actions/wallet.ts"
+    },
+    "0053c8d6484f610657039cb04713f56ec1131bfbbd": {
+      "workers": {
+        "app/register/page": {
+          "moduleId": 46902,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "getWalletData",
+      "filename": "apps/web/app/actions/wallet.ts"
+    }
+  },
+  "edge": {}
+}

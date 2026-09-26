@@ -1,0 +1,3 @@
+{
+  "/api/totp/keys/[id]/route": "app/api/totp/keys/[id]/route.js"
+}

@@ -1,0 +1,12 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/catalog/products/route.js")
+R.c("server/chunks/[root-of-the-server]__123ja_1._.js")
+R.c("server/chunks/[root-of-the-server]__1z6zfwy._.js")
+R.c("server/chunks/node_modules_kysely_dist_0o62fx0._.js")
+R.c("server/chunks/node_modules_@better-auth_kysely-adapter_dist_index_mjs_1uv7fub._.js")
+R.c("server/chunks/[root-of-the-server]__02_2sm-._.js")
+R.c("server/chunks/[root-of-the-server]__0uxipwd._.js")
+R.c("server/chunks/node_modules_@better-auth_core_dist_db_adapter_factory_mjs_1xu2qqp._.js")
+R.c("server/chunks/node_modules_kysely_dist_00plsgg._.js")
+R.c("server/chunks/apps_web__next-internal_server_app_api_catalog_products_route_actions_0vm4ma_.js")
+R.m(23976)
+module.exports=R.m(23976).exports

@@ -1,0 +1,3 @@
+{
+  "/api/admin/bulkmail/balance/route": "app/api/admin/bulkmail/balance/route.js"
+}

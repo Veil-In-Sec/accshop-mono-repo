@@ -1,0 +1,13 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/verification-codes/outlook/route.js")
+R.c("server/chunks/[root-of-the-server]__142vmuv._.js")
+R.c("server/chunks/[root-of-the-server]__1krxstd._.js")
+R.c("server/chunks/node_modules_kysely_dist_0o62fx0._.js")
+R.c("server/chunks/_1iwknyj._.js")
+R.c("server/chunks/[root-of-the-server]__02_2sm-._.js")
+R.c("server/chunks/node_modules_kysely_dist_00plsgg._.js")
+R.c("server/chunks/node_modules_@better-auth_core_dist_db_adapter_factory_mjs_1xu2qqp._.js")
+R.c("server/chunks/[root-of-the-server]__1a91dhj._.js")
+R.c("server/chunks/node_modules_@better-auth_kysely-adapter_dist_index_mjs_1uv7fub._.js")
+R.c("server/chunks/0gy1__next-internal_server_app_api_verification-codes_outlook_route_actions_0lkzkw1.js")
+R.m(88035)
+module.exports=R.m(88035).exports

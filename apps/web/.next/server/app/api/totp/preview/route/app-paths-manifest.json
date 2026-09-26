@@ -1,0 +1,3 @@
+{
+  "/api/totp/preview/route": "app/api/totp/preview/route.js"
+}

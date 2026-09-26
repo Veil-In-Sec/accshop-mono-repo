@@ -1,0 +1,16 @@
+{
+  "node": {
+    "0053c8d6484f610657039cb04713f56ec1131bfbbd": {
+      "workers": {
+        "app/login/page": {
+          "moduleId": 31883,
+          "async": false,
+          "codeHash": null
+        }
+      },
+      "exportedName": "getWalletData",
+      "filename": "apps/web/app/actions/wallet.ts"
+    }
+  },
+  "edge": {}
+}

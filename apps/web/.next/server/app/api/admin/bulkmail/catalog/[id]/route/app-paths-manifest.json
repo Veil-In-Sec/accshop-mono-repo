@@ -1,0 +1,3 @@
+{
+  "/api/admin/bulkmail/catalog/[id]/route": "app/api/admin/bulkmail/catalog/[id]/route.js"
+}

@@ -1,0 +1,3 @@
+{
+  "/api/verification-codes/gmail/route": "app/api/verification-codes/gmail/route.js"
+}
