@@ -29,6 +29,16 @@ export async function addTotpKey(input: TotpCreateInput) {
   }
 }
 
+/** Stateless one-time preview — validates and codes, stores nothing. */
+export async function previewTotpCode(input: TotpCreateInput) {
+  try {
+    const data = await serverApi.totp.preview(input)
+    return { ok: true as const, data }
+  } catch (e) {
+    return { ok: false as const, message: e instanceof Error ? e.message : "Could not generate a code." }
+  }
+}
+
 export async function renameTotpKey(id: number, input: { label?: string; issuer?: string }) {
   try {
     const data = await serverApi.totp.rename(id, input)

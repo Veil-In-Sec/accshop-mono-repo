@@ -20,10 +20,6 @@ export default function DashboardOverviewPage() {
   const [activeCategory, setActiveCategory] = React.useState<string | null>(null)
   const [search, setSearch] = React.useState("")
 
-  React.useEffect(() => {
-    if (categories && categories.length > 0 && !activeCategory) setActiveCategory(categories[0])
-  }, [categories, activeCategory])
-
   const filteredProducts = React.useMemo(() => {
     let list = (products ?? []).filter((p) => !activeCategory || p.category === activeCategory)
     if (search.trim()) {
@@ -104,7 +100,7 @@ export default function DashboardOverviewPage() {
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           <button
-            onClick={() => setActiveCategory(categories?.[0] ?? null)}
+            onClick={() => setActiveCategory(null)}
             className={`relative flex items-center gap-2 px-5 py-2 rounded-full text-xs whitespace-nowrap font-semibold ${!activeCategory || activeCategory === categories?.[0] ? "text-white" : "bg-card text-muted-foreground hover:bg-muted"}`}
           >
             {(!activeCategory || activeCategory === categories?.[0]) && (

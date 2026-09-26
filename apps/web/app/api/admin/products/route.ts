@@ -4,14 +4,19 @@ import { requireAdmin } from "@/lib/server/admin";
 import { jsonError } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { prismaError, readJson } from "@/lib/server/http";
+import { routeError } from "@/lib/server/upstream";
 
 export async function GET(req: Request) {
-  await requireAdmin(req);
-  const section = new URL(req.url).searchParams.get("section") ?? undefined;
-  if (section !== undefined && !section.trim()) {
-    return Response.json(await listProducts(undefined));
+  try {
+    await requireAdmin(req);
+    const section = new URL(req.url).searchParams.get("section") ?? undefined;
+    if (section !== undefined && !section.trim()) {
+      return Response.json(await listProducts(undefined));
+    }
+    return Response.json(await listProducts(section?.trim() || undefined));
+  } catch (e) {
+    return routeError(e);
   }
-  return Response.json(await listProducts(section?.trim() || undefined));
 }
 
 async function listProducts(section?: string) {
@@ -64,8 +69,9 @@ function num(v: unknown, field: string, min: number, max: number, required: bool
 }
 
 export async function POST(req: Request) {
-  await requireAdmin(req);
-  const body = await readJson<Record<string, unknown>>(req);
+  try {
+    await requireAdmin(req);
+    const body = await readJson<Record<string, unknown>>(req);
 
   // Manual UpsertProductDto validation -> 400.
   let id: number | undefined;
@@ -190,5 +196,8 @@ export async function POST(req: Request) {
     throw error;
   }
 
-  return Response.json({ success: true });
+    return Response.json({ success: true });
+  } catch (e) {
+    return routeError(e);
+  }
 }

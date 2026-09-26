@@ -7,6 +7,7 @@
 
 import { db } from "./db"
 import { badRequest } from "./upstream"
+import { normalizeAccount } from "@/lib/credentials"
 
 export interface OwnedEmail {
   email: string
@@ -24,7 +25,7 @@ export async function listMyEmails(userId: string): Promise<OwnedEmail[]> {
   const seen = new Map<string, { email: string; orderId: number; productName: string }>()
   for (const o of orders) {
     const candidates: string[] = []
-    if (o.deliveredEmail) candidates.push(o.deliveredEmail)
+    if (o.deliveredEmail) candidates.push(normalizeAccount({ email: o.deliveredEmail, password: "" }).email)
     if (o.deliveredCredentials) {
       try {
         const parsed = JSON.parse(o.deliveredCredentials) as Array<{
@@ -32,7 +33,7 @@ export async function listMyEmails(userId: string): Promise<OwnedEmail[]> {
         }>
         if (Array.isArray(parsed)) {
           for (const acc of parsed) {
-            if (acc?.email) candidates.push(acc.email)
+            if (acc?.email) candidates.push(normalizeAccount({ email: acc.email, password: "" }).email)
           }
         }
       } catch {
@@ -63,6 +64,8 @@ export interface OwnedAccount {
   password?: string
   refresh_token: string
   client_id: string
+  /** Supplier of the order the credentials came from (hotmail143 | bulkmail). */
+  supplier?: string
 }
 
 /**
@@ -82,15 +85,19 @@ export async function findOwnedAccount(
     take: 200,
   })
   for (const o of orders) {
-    if ((o.deliveredEmail ?? "").trim().toLowerCase() === wanted) {
-      const rt = (o.deliveredRefreshToken ?? "").trim()
-      const cid = (o.deliveredClientId ?? "").trim()
-      if (rt && cid) {
-        return {
-          email: o.deliveredEmail!.trim(),
-          password: o.deliveredPassword ?? undefined,
-          refresh_token: rt,
-          client_id: cid,
+    if (o.deliveredEmail) {
+      const flatEmail = normalizeAccount({ email: o.deliveredEmail, password: "" }).email
+      if (flatEmail.trim().toLowerCase() === wanted) {
+        const rt = (o.deliveredRefreshToken ?? "").trim()
+        const cid = (o.deliveredClientId ?? "").trim()
+        if (rt && cid) {
+          return {
+            email: flatEmail.trim(),
+            password: o.deliveredPassword ?? undefined,
+            refresh_token: rt,
+            client_id: cid,
+            supplier: (o.supplier ?? "hotmail143").toLowerCase(),
+          }
         }
       }
     }
@@ -106,16 +113,63 @@ export async function findOwnedAccount(
         }>
         if (Array.isArray(parsed)) {
           for (const acc of parsed) {
-            if ((acc?.email ?? "").trim().toLowerCase() !== wanted) continue
+            if (!acc?.email) continue
+            const fixed = normalizeAccount({
+              email: acc.email,
+              password: acc.password ?? "",
+            })
+            if (fixed.email.trim().toLowerCase() !== wanted) continue
             const rt = (acc?.refresh_token ?? acc?.refreshToken ?? "").trim()
             const cid = (acc?.client_id ?? acc?.clientId ?? "").trim()
             if (rt && cid) {
               return {
-                email: acc.email!.trim(),
-                password: acc.password,
+                email: fixed.email.trim(),
+                password: fixed.password,
                 refresh_token: rt,
                 client_id: cid,
+                supplier: (o.supplier ?? "hotmail143").toLowerCase(),
               }
+            }
+          }
+        }
+      } catch {
+        /* ignore malformed credentials JSON */
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * Supplier of the most recent completed order containing the email
+ * (flat column or credentials JSON, normalized). Used to decide
+ * whether the Hotmail143 email-only fallback applies.
+ */
+export async function findOrderSupplier(
+  userId: string,
+  email: string,
+): Promise<string | null> {
+  const wanted = email.trim().toLowerCase()
+  if (!wanted) return null
+  const orders = await db.order.findMany({
+    where: { userId, status: "completed" },
+    orderBy: { purchasedAt: "desc" },
+    take: 200,
+  })
+  for (const o of orders) {
+    if (o.deliveredEmail) {
+      const flat = normalizeAccount({ email: o.deliveredEmail, password: "" }).email
+      if (flat.trim().toLowerCase() === wanted) return (o.supplier ?? "hotmail143").toLowerCase()
+    }
+    if (o.deliveredCredentials) {
+      try {
+        const parsed = JSON.parse(o.deliveredCredentials) as Array<{ email?: string }>
+        if (Array.isArray(parsed)) {
+          for (const acc of parsed) {
+            if (!acc?.email) continue
+            const fixed = normalizeAccount({ email: acc.email, password: "" }).email
+            if (fixed.trim().toLowerCase() === wanted) {
+              return (o.supplier ?? "hotmail143").toLowerCase()
             }
           }
         }

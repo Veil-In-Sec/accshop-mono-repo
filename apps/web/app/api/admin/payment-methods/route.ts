@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/server/admin";
 import { jsonError } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { isPrismaNotFound, readJson } from "@/lib/server/http";
+import { routeError } from "@/lib/server/upstream";
 
 function coerceOptionalId(v: unknown): number | undefined {
   if (v === undefined || v === null) return undefined;
@@ -23,26 +24,31 @@ function coerceSortOrder(v: unknown): number {
 }
 
 export async function GET(req: Request) {
-  await requireAdmin(req);
-  const rows = await db.paymentMethod.findMany({ orderBy: { sortOrder: "asc" } });
-  return Response.json(
-    rows.map((m) => ({
-      id: m.id,
-      name: m.name,
-      type: m.type,
-      accountNumber: m.accountNumber ?? "",
-      accountName: m.accountName ?? "",
-      instructions: m.instructions ?? "",
-      icon: m.icon ?? "",
-      enabled: m.enabled,
-      sortOrder: m.sortOrder,
-    })),
-  );
+  try {
+    await requireAdmin(req);
+    const rows = await db.paymentMethod.findMany({ orderBy: { sortOrder: "asc" } });
+    return Response.json(
+      rows.map((m) => ({
+        id: m.id,
+        name: m.name,
+        type: m.type,
+        accountNumber: m.accountNumber ?? "",
+        accountName: m.accountName ?? "",
+        instructions: m.instructions ?? "",
+        icon: m.icon ?? "",
+        enabled: m.enabled,
+        sortOrder: m.sortOrder,
+      })),
+    );
+  } catch (e) {
+    return routeError(e);
+  }
 }
 
 export async function POST(req: Request) {
-  await requireAdmin(req);
-  const body = (await readJson(req)) as {
+  try {
+    await requireAdmin(req);
+    const body = (await readJson(req)) as {
     id?: unknown;
     name?: unknown;
     type?: unknown;
@@ -93,5 +99,8 @@ export async function POST(req: Request) {
     throw error;
   }
 
-  return Response.json({ success: true });
+    return Response.json({ success: true });
+  } catch (e) {
+    return routeError(e);
+  }
 }

@@ -96,6 +96,7 @@ export async function getWalletData(userId: string) {
       deliveredClientId: o.deliveredClientId ?? "",
       deliveredCredentials: o.deliveredCredentials ?? "",
       status: o.status,
+      supplier: o.supplier ?? "hotmail143",
       purchasedAt: o.purchasedAt.toISOString(),
     })),
     transactions: txnRows.map((t) => ({
@@ -112,9 +113,9 @@ export async function getWalletData(userId: string) {
 
 /**
  * Buys a product directly with the customer's deposit balance.
- * The total is deducted first, then the order is fulfilled automatically
- * from Hotmail143 — there is no manual deliver step. If the supplier
- * call fails, the order is marked failed and the balance is refunded.
+ * For custom products: order is created with status "processing" and waits for
+ * user to submit requirements, then admin delivers manually.
+ * For supplier products (Hotmail143/BulkMail): auto-fulfilled instantly.
  */
 export async function purchaseProduct(
   userId: string,
@@ -135,8 +136,6 @@ export async function purchaseProduct(
   const qty = Math.min(1000, Math.floor(quantity ?? 1))
   if (qty > product.stock) badRequest(`Only ${product.stock} left in stock.`)
 
-  // Instant delivery requires a supplier mapping (Hotmail143 or BulkMail).
-  // Fail fast BEFORE touching the balance so no money gets stuck.
   const supplier = (
     (product as { supplier?: string }).supplier ?? "hotmail143"
   ).toLowerCase()
@@ -145,7 +144,10 @@ export async function purchaseProduct(
   const hasHotmailMapping = Boolean(product.externalProductType && product.externalAccountType)
   const hasBulkMailMapping = bulkmailProductId != null
   const useBulkMail = supplier === "bulkmail" || (hasBulkMailMapping && !hasHotmailMapping)
-  if (!hasHotmailMapping && !hasBulkMailMapping) {
+  const isCustom = supplier === "custom"
+
+  // For custom products, no supplier mapping needed - admin delivers manually
+  if (!isCustom && !hasHotmailMapping && !hasBulkMailMapping) {
     badRequest("This product is not available for instant delivery yet.")
   }
 
@@ -182,13 +184,15 @@ export async function purchaseProduct(
       data: {
         userId,
         type: "purchase",
-        description: `Purchased ${product.name} × ${qty}`,
+        description: `Purchased ${product.name} x ${qty}`,
         amount: (-total).toFixed(2),
         balanceAfter: Number(wallet.balance).toFixed(2),
         status: "completed",
       },
     })
 
+    // For custom products, status stays "processing" until admin delivers
+    // For supplier products, status is "processing" and will be fulfilled
     const order = await tx.order.create({
       data: {
         userId,
@@ -198,15 +202,47 @@ export async function purchaseProduct(
         price: product.price,
         quantity: qty,
         status: "processing",
-        supplier: useBulkMail ? "bulkmail" : "hotmail143",
+        supplier: isCustom ? "custom" : (useBulkMail ? "bulkmail" : "hotmail143"),
         paymentMethodId: paymentMethodId ?? null,
         transactionReference: transactionReference?.trim() || null,
         senderAccountNumber: senderAccountNumber || null,
       },
     })
 
-    return { order, balance: Number(wallet.balance) }
+    return { order, balance: Number(wallet.balance), isCustom }
   })
+
+  // For custom products, don't auto-fulfill - wait for user request + admin delivery
+  if (result.isCustom) {
+    try {
+      await notify(
+        userId,
+        "info",
+        "Custom Product Order Placed",
+        `Your order #${result.order.id} (${product.name}) is confirmed. Please submit your requirements from the order details page so our team can deliver your custom product.`
+      )
+    } catch {
+      // Ignore notification errors
+    }
+
+    return {
+      success: true,
+      message: "Payment successful — please submit your custom requirements from the order details page.",
+      delivered: false,
+      balance: result.balance,
+      total,
+      isCustom: true,
+      order: {
+        id: String(result.order.id),
+        productName: result.order.productName,
+        tag: result.order.tag ?? undefined,
+        price: Number(result.order.price),
+        quantity: result.order.quantity,
+        status: result.order.status,
+        purchasedAt: result.order.purchasedAt.toISOString(),
+      },
+    }
+  }
 
   // Auto-fulfill from the supplier OUTSIDE the DB transaction (external HTTP call).
   try {
@@ -279,7 +315,7 @@ export async function purchaseProduct(
         userId,
         "info",
         "Order failed — balance refunded",
-        `Order #${result.order.id} (${product.name}) could not be fulfilled, so ${total.toFixed(2)} was refunded to your wallet.`,
+        `Order #${result.order.id} (${product.name}) could not be fulfilled, so ${total.toFixed(2)} was refunded to your wallet.`
       )
     } catch {
       /* ignore */

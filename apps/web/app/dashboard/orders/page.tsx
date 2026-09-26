@@ -1,6 +1,6 @@
 "use client"
 
-import { ShoppingCart, ArrowRight, RefreshCw } from "lucide-react"
+import { ShoppingCart, ArrowRight, RefreshCw, Package } from "lucide-react"
 import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
@@ -23,6 +23,11 @@ import { useAuth } from "@/lib/use-auth"
 export default function OrderHistoryPage() {
   const { orders, refresh } = useAuth()
   const { page, totalPages, total, paged, setPage } = usePagination(orders)
+
+  // Check if order is a custom product waiting for delivery
+  const isWaitingForDelivery = (order: typeof orders[0]) => {
+    return order.status === "processing" && order.supplier === "custom" && !order.deliveredEmail
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -89,6 +94,12 @@ export default function OrderHistoryPage() {
                           ×{order.quantity}
                         </Badge>
                       )}
+                      {isWaitingForDelivery(order) && (
+                        <Badge variant="outline" className="text-[10px] border-amber-500/30 bg-amber-500/10 text-amber-400">
+                          <Package className="size-2.5 mr-1" />
+                          Waiting for Delivery
+                        </Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="font-medium text-foreground">
@@ -107,6 +118,14 @@ export default function OrderHistoryPage() {
                         className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
                       >
                         <ArrowRight className="size-3.5" />
+                        View
+                      </Link>
+                    ) : isWaitingForDelivery(order) ? (
+                      <Link
+                        href={`/dashboard/orders/${order.id}`}
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-3 py-1.5 text-xs font-medium text-amber-400 hover:bg-amber-500/30"
+                      >
+                        <Package className="size-3.5" />
                         View
                       </Link>
                     ) : (

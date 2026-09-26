@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Copy, Download, Loader2, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Copy, Download, Loader2, CheckCircle2, Package, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { toast } from "sonner"
@@ -10,6 +10,8 @@ import { ClientDate } from "@/components/client-date"
 import { copyToClipboard } from "@/lib/clipboard"
 import { formatLineTotal } from "@/lib/format"
 import { exportCredentialsTxt, parseCredentialAccounts, toPipeLine, PIPE_FORMAT_HINT } from "@/lib/credentials"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 export default function OrderDetailsPage() {
   const { id } = useParams<{ id: string }>()
@@ -24,6 +26,8 @@ export default function OrderDetailsPage() {
     deliveredRefreshToken: order?.deliveredRefreshToken,
     deliveredClientId: order?.deliveredClientId,
   })
+
+  const isCustomProduct = order?.supplier === "custom"
 
   async function copyLine(line: string) {
     if (!line) return
@@ -46,6 +50,42 @@ export default function OrderDetailsPage() {
       accounts,
     )
     toast.success("TXT exported.")
+  }
+
+  function getStatusDisplay() {
+    const s = (order?.status ?? "").toString().toLowerCase()
+    if (s === "completed") return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-400">
+        <CheckCircle2 className="size-3" />
+        Completed
+      </span>
+    )
+    if (s === "processing" || s === "pending") {
+      if (isCustomProduct) {
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-400">
+            <Package className="size-3" />
+            Waiting for Delivery
+          </span>
+        )
+      }
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-400">
+          <Loader2 className="size-3 animate-spin text-amber-400" />
+          Processing
+        </span>
+      )
+    }
+    if (s === "failed") return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-400">
+        Failed
+      </span>
+    )
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground capitalize">
+        {order?.status ?? "unknown"}
+      </span>
+    )
   }
 
   if (isLoading) {
@@ -95,31 +135,7 @@ export default function OrderDetailsPage() {
           </div>
           <div>
             <p className="text-muted-foreground">Status</p>
-            {(() => {
-              const s = (order.status ?? "").toString().toLowerCase()
-              if (s === "completed") return (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-400">
-                  <CheckCircle2 className="size-3" />
-                  Completed
-                </span>
-              )
-              if (s === "processing" || s === "pending") return (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-400">
-                  <Loader2 className="size-3 animate-spin text-amber-400" />
-                  Processing
-                </span>
-              )
-              if (s === "failed") return (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-400">
-                  Failed
-                </span>
-              )
-              return (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground capitalize">
-                  {order.status ?? "unknown"}
-                </span>
-              )
-            })()}
+            {getStatusDisplay()}
           </div>
           <div>
             <p className="text-muted-foreground">Date</p>
@@ -127,6 +143,21 @@ export default function OrderDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Custom Product Status */}
+      {isCustomProduct && order.status === "processing" && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+          <div className="flex items-center gap-3">
+            <Package className="size-5 text-amber-400" />
+            <div>
+              <h2 className="text-base font-semibold text-amber-400">Custom Product - Waiting for Delivery</h2>
+              <p className="text-sm text-muted-foreground">
+                Your custom product is being prepared. The admin will deliver the credentials once ready.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {order.status === "completed" ? (
         <div className="rounded-xl border border-border bg-card p-4">

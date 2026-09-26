@@ -26,6 +26,7 @@ import {
   upsertTestimonial,
 } from "@/app/actions/admin"
 import type { AdminSettings, Faq, Feature, Testimonial } from "@/lib/api/types"
+import { clearCurrencySymbolCache } from "@/lib/use-currency"
 import { Switch } from "@/components/ui/switch"
 import "./settings-studio.css"
 
@@ -359,8 +360,11 @@ export function SettingsStudio({
       contactSalesEmail: form.contactSalesEmail,
     })
     setSaving(false)
-    if (result.success) toast.success("Settings saved.")
-    else toast.error("Could not save settings.")
+    if (result.success) {
+      clearCurrencySymbolCache()
+      toast.success("Settings saved.")
+    }
+    else toast.error((result as { message?: string }).message ?? "Could not save settings.")
   }
 
   function handleDiscard() {

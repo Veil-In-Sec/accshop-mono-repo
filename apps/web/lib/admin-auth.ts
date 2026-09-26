@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto"
 import { cookies } from "next/headers"
 
-import { ADMIN_COOKIE_NAME, adminTokenPayload } from "@/lib/admin-token"
+import { ADMIN_COOKIE_NAME, adminTokenPayload, publicOriginIsHttps } from "@/lib/admin-token"
 
 function getSecret() {
   const secret = process.env.BETTER_AUTH_SECRET
@@ -34,7 +34,7 @@ export async function createAdminSession() {
   const store = await cookies()
   store.set(ADMIN_COOKIE_NAME, signToken(), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: publicOriginIsHttps(),
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 12, // 12 hours

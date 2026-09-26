@@ -99,6 +99,7 @@ export interface Order {
   deliveredClientId?: string
   deliveredCredentials?: string
   status?: "pending" | "processing" | "completed" | "failed"
+  supplier?: string
   purchasedAt: string
 }
 
@@ -590,7 +591,7 @@ export interface GraphCodeResponse {
 
 /**
  * Discriminated envelope returned by POST /verification-codes/hotmail.
- * `graph` = looked up via GraphMail `graph_messages` (full credentials line
+ * `graph` = looked up via GraphMail `graph_code` (full credentials line
  * or stored refresh_token + client_id). `hotmail` / `outlook` are legacy
  * Hotmail143 envelopes kept for backward compatibility.
  */
@@ -655,4 +656,14 @@ export interface TotpCreateInput {
 
 export interface TotpCreateResult extends TotpKeyMeta {
   preview: { code: string; secondsRemaining: number }
+}
+
+/** Stateless one-time preview — nothing is stored server-side. */
+export interface TotpPreviewResult {
+  code: string
+  secondsRemaining: number
+  period: number
+  digits: number
+  label: string
+  issuer: string
 }

@@ -2,6 +2,7 @@ import { ADMIN_COOKIE_NAME, signAdminToken, verifyAdminPassword } from "@/lib/se
 import { jsonError } from "@/lib/server/auth";
 import { readJson } from "@/lib/server/http";
 import { routeError } from "@/lib/server/upstream";
+import { publicOriginIsHttps } from "@/lib/admin-token";
 
 const MAX_AGE = 60 * 60 * 12; // 12 hours, in seconds
 
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
     throw jsonError(400, "Incorrect password.");
   }
   const res = Response.json({ success: true, message: "Signed in." });
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = publicOriginIsHttps() ? "; Secure" : "";
   res.headers.append(
     "Set-Cookie",
     `${ADMIN_COOKIE_NAME}=${signAdminToken()}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE}${secure}`,

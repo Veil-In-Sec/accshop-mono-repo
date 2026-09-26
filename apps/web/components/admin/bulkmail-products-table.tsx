@@ -376,24 +376,31 @@ export function BulkMailProductsTable({
       `${form.section}-${Date.now()}-${form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30)}`
 
     setIsSaving(true)
-    const result = await upsertProduct({
-      id: form.id,
-      slug,
-      name: form.name.trim(),
-      category: form.category.trim(),
-      section: form.section,
-      price: Number.parseFloat(form.price),
-      originalPrice: form.originalPrice ? Number.parseFloat(form.originalPrice) : null,
-      stock: matchedStock ?? 0,
-      tag: form.tag.trim(),
-      badge: form.badge.trim(),
-      active: form.active,
-      featured: form.featured,
-      externalProductType: "",
-      externalAccountType: "",
-      supplier: "bulkmail",
-      bulkmailProductId: form.bulkmailProductId,
-    })
+    let result: Awaited<ReturnType<typeof upsertProduct>>
+    try {
+      result = await upsertProduct({
+        id: form.id,
+        slug,
+        name: form.name.trim(),
+        category: form.category.trim(),
+        section: form.section,
+        price: Number.parseFloat(form.price),
+        originalPrice: form.originalPrice ? Number.parseFloat(form.originalPrice) : null,
+        stock: matchedStock ?? 0,
+        tag: form.tag.trim(),
+        badge: form.badge.trim(),
+        active: form.active,
+        featured: form.featured,
+        externalProductType: "",
+        externalAccountType: "",
+        supplier: "bulkmail",
+        bulkmailProductId: form.bulkmailProductId,
+      })
+    } catch (e) {
+      setIsSaving(false)
+      toast.error(e instanceof Error ? e.message : "Could not save product.")
+      return
+    }
     setIsSaving(false)
 
     if (result.success) {
@@ -422,15 +429,23 @@ export function BulkMailProductsTable({
         return [...prev, updated]
       })
     } else {
-      toast.error("Could not save product.")
+      toast.error((result as { message?: string }).message ?? "Could not save product.")
     }
   }
 
   async function handleDelete(id: number) {
-    const result = await deleteProduct(id)
-    if (result.success) {
+    let delResult: Awaited<ReturnType<typeof deleteProduct>>
+    try {
+      delResult = await deleteProduct(id)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete product.")
+      return
+    }
+    if (delResult.success) {
       setProducts((prev) => prev.filter((p) => p.id !== id))
       toast.success("Product deleted.")
+    } else {
+      toast.error((delResult as { message?: string }).message ?? "Could not delete product.")
     }
   }
 

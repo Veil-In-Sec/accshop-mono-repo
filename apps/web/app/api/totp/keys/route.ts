@@ -11,7 +11,7 @@ import {
 import { encryptTotpSecret } from "@/lib/server/totp-vault";
 import { HttpError, badRequest, routeError } from "@/lib/server/upstream";
 
-const MAX_KEYS_PER_USER = 50;
+const MAX_KEYS_PER_USER = 1;
 
 // NOTE (multi-instance limitation): in-memory sliding-window counters live in
 // process memory. On multi-instance / serverless deployments each instance
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
 
     const count = await db.totpKey.count({ where: { userId: user.id } });
     if (count >= MAX_KEYS_PER_USER) {
-      badRequest(`You can save up to ${MAX_KEYS_PER_USER} keys. Delete one to add another.`);
+      badRequest("One-time tool: finish or discard the current code before adding another.");
     }
 
     let label = (body.label as string | undefined)?.trim() ?? "";

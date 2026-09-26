@@ -5,6 +5,11 @@ import { revalidatePath } from "next/cache"
 import { serverApi } from "@/lib/api/endpoints"
 import { clearAdminSession, createAdminSession } from "@/lib/admin-auth"
 import { isFail, withAction } from "@/lib/action"
+import { clearCurrencySymbol } from "@/lib/products"
+
+function actionError(e: unknown, fallback: string) {
+  return { success: false as const, message: e instanceof Error ? e.message : fallback }
+}
 
 export async function adminLogin(password: string) {
   const result = await serverApi.admin.login(password)
@@ -57,17 +62,25 @@ export async function upsertProduct(input: {
   supplier?: string
   bulkmailProductId?: number | null
 }) {
-  const result = await serverApi.admin.upsertProduct(input)
-  revalidatePath("/admin/products")
-  revalidatePath("/")
-  revalidatePath("/dashboard")
-  return result
+  try {
+    const result = await serverApi.admin.upsertProduct(input)
+    revalidatePath("/admin/products")
+    revalidatePath("/")
+    revalidatePath("/dashboard")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not save product.")
+  }
 }
 
 export async function deleteProduct(id: number) {
-  const result = await serverApi.admin.deleteProduct(id)
-  revalidatePath("/admin/products")
-  return result
+  try {
+    const result = await serverApi.admin.deleteProduct(id)
+    revalidatePath("/admin/products")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not delete product.")
+  }
 }
 
 // --- Categories ---------------------------------------------------------------
@@ -77,24 +90,36 @@ export async function listCategories() {
 }
 
 export async function createCategory(name: string) {
-  const result = await serverApi.admin.categories.create(name)
-  revalidatePath("/admin/categories")
-  revalidatePath("/dashboard")
-  return result
+  try {
+    const result = await serverApi.admin.categories.create(name)
+    revalidatePath("/admin/categories")
+    revalidatePath("/dashboard")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not create category.")
+  }
 }
 
 export async function updateCategory(id: number, input: { name?: string; active?: boolean }) {
-  const result = await serverApi.admin.categories.update(id, input)
-  revalidatePath("/admin/categories")
-  revalidatePath("/dashboard")
-  return result
+  try {
+    const result = await serverApi.admin.categories.update(id, input)
+    revalidatePath("/admin/categories")
+    revalidatePath("/dashboard")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not update category.")
+  }
 }
 
 export async function deleteCategory(id: number) {
-  const result = await serverApi.admin.categories.delete(id)
-  revalidatePath("/admin/categories")
-  revalidatePath("/dashboard")
-  return result
+  try {
+    const result = await serverApi.admin.categories.delete(id)
+    revalidatePath("/admin/categories")
+    revalidatePath("/dashboard")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not delete category.")
+  }
 }
 
 export async function listPublicCategories() {
@@ -118,16 +143,24 @@ export async function upsertPaymentMethod(input: {
   enabled: boolean
   sortOrder: number
 }) {
-  const result = await serverApi.payments.upsert(input)
-  revalidatePath("/admin/payment-methods")
-  revalidatePath("/dashboard/pay")
-  return result
+  try {
+    const result = await serverApi.payments.upsert(input)
+    revalidatePath("/admin/payment-methods")
+    revalidatePath("/dashboard/pay")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not save payment method.")
+  }
 }
 
 export async function deletePaymentMethod(id: number) {
-  const result = await serverApi.payments.remove(id)
-  revalidatePath("/admin/payment-methods")
-  return result
+  try {
+    const result = await serverApi.payments.remove(id)
+    revalidatePath("/admin/payment-methods")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not delete payment method.")
+  }
 }
 
 // --- Site settings -----------------------------------------------------------
@@ -135,8 +168,6 @@ export async function deletePaymentMethod(id: number) {
 export async function getAdminSettings() {
   return serverApi.admin.settings()
 }
-
-import { clearCurrencySymbolCache } from "@/lib/use-currency"
 
 export async function updateAdminSettings(input: {
   currencySymbol: string
@@ -189,7 +220,7 @@ export async function updateAdminSettings(input: {
 }) {
   try {
     const result = await serverApi.admin.updateSettings(input)
-    clearCurrencySymbolCache()
+    clearCurrencySymbol()
     revalidatePath("/admin/settings")
     revalidatePath("/dashboard/pay")
     revalidatePath("/dashboard/deposit")
@@ -225,12 +256,12 @@ export async function deleteUser(userId: string) {
 }
 
 export async function listAllOrders() {
-  return serverApi.admin.orders()
+  return serverApi.admin.orders.list()
 }
 
 export async function getProcessingOrdersCount() {
   try {
-    return await serverApi.admin.ordersAttentionCount()
+    return await serverApi.admin.orders.attentionCount()
   } catch {
     return { count: 0 }
   }
@@ -436,24 +467,36 @@ export async function upsertFeature(input: {
   title: string
   description: string
 }) {
-  const result = await serverApi.content.upsertFeature(input)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.upsertFeature(input)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not save feature.")
+  }
 }
 
 export async function deleteFeature(id: number) {
-  const result = await serverApi.content.deleteFeature(id)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.deleteFeature(id)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not delete feature.")
+  }
 }
 
 export async function moveFeature(id: number, direction: "up" | "down") {
-  const result = await serverApi.content.moveFeature(id, direction)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.moveFeature(id, direction)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not move feature.")
+  }
 }
 
 export async function listFaqs() {
@@ -461,24 +504,36 @@ export async function listFaqs() {
 }
 
 export async function upsertFaq(input: { id?: number; question: string; answer: string }) {
-  const result = await serverApi.content.upsertFaq(input)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.upsertFaq(input)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not save FAQ.")
+  }
 }
 
 export async function deleteFaq(id: number) {
-  const result = await serverApi.content.deleteFaq(id)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.deleteFaq(id)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not delete FAQ.")
+  }
 }
 
 export async function moveFaq(id: number, direction: "up" | "down") {
-  const result = await serverApi.content.moveFaq(id, direction)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.moveFaq(id, direction)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not move FAQ.")
+  }
 }
 
 export async function listTestimonials() {
@@ -494,22 +549,64 @@ export async function upsertTestimonial(input: {
   role?: string
   avatar?: string
 }) {
-  const result = await serverApi.content.upsertTestimonial(input)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.upsertTestimonial(input)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not save testimonial.")
+  }
 }
 
 export async function deleteTestimonial(id: number) {
-  const result = await serverApi.content.deleteTestimonial(id)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.deleteTestimonial(id)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not delete testimonial.")
+  }
 }
 
 export async function moveTestimonial(id: number, direction: "up" | "down") {
-  const result = await serverApi.content.moveTestimonial(id, direction)
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
-  return result
+  try {
+    const result = await serverApi.content.moveTestimonial(id, direction)
+    revalidatePath("/admin/settings")
+    revalidatePath("/")
+    return result
+  } catch (e) {
+    return actionError(e, "Could not move testimonial.")
+  }
+}
+
+export async function deliverCustomProduct(
+  orderId: number,
+  credentials: Array<{
+    email: string;
+    password: string;
+    refresh_token?: string;
+    client_id?: string;
+  }>
+) {
+  try {
+    const result = await serverApi.admin.orders.deliverCustom(orderId, { credentials })
+    revalidatePath("/admin/orders")
+    revalidatePath(`/admin/orders/${orderId}`)
+    return result
+  } catch (e) {
+    return actionError(e, "Could not deliver custom product.")
+  }
+}
+
+export async function rejectCustomProduct(orderId: number) {
+  try {
+    const result = await serverApi.admin.orders.rejectCustom(orderId)
+    revalidatePath("/admin/orders")
+    revalidatePath(`/admin/orders/${orderId}`)
+    return result
+  } catch (e) {
+    return actionError(e, "Could not reject custom product.")
+  }
 }

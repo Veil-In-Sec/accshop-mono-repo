@@ -116,7 +116,7 @@ export function PaymentMethodsTable({ initialMethods }: { initialMethods: Paymen
         return [...prev, updated]
       })
       } else {
-        toast.error("Could not save payment method.")
+        toast.error((result as { message?: string }).message ?? "Could not save payment method.")
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save payment method.")

@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/server/admin";
 import { jsonError } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { prismaError, readJson } from "@/lib/server/http";
+import { routeError } from "@/lib/server/upstream";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -35,8 +36,9 @@ function isValidUrl(v: string): boolean {
 }
 
 export async function GET(req: Request) {
-  await requireAdmin(req);
-  const row = await db.siteSetting.findUnique({ where: { id: 1 } });
+  try {
+    await requireAdmin(req);
+    const row = await db.siteSetting.findUnique({ where: { id: 1 } });
   return Response.json(
     row
       ? {
@@ -94,7 +96,10 @@ export async function GET(req: Request) {
           contactSalesEmail: row.contactSalesEmail ?? "",
         }
       : null,
-  );
+    );
+  } catch (e) {
+    return routeError(e);
+  }
 }
 
 // Max lengths mirror UpdateSettingsDto's @MaxLength constraints.
@@ -142,34 +147,37 @@ const OPTIONAL_LIMITS: Record<string, number> = {
 };
 
 export async function PUT(req: Request) {
-  await requireAdmin(req);
-  const body = await readJson(req);
-  if (!isRecord(body)) throw jsonError(400, "Invalid request body.");
+  try {
+    await requireAdmin(req);
+    const body = await readJson(req);
+    if (!isRecord(body)) throw jsonError(400, "Invalid request body.");
 
-  // Required fields (mirror UpdateSettingsDto).
-  const currencySymbol = body.currencySymbol;
-  if (typeof currencySymbol !== "string" || currencySymbol.length < 1 || currencySymbol.length > 8) {
-    throw jsonError(400, "currencySymbol must be a string of 1-8 characters.");
-  }
-  const siteName = body.siteName;
-  if (typeof siteName !== "string" || siteName.length < 1 || siteName.length > 80) {
-    throw jsonError(400, "siteName must be a string of 1-80 characters.");
-  }
-  const numbers: Record<string, number> = {};
-  for (const key of ["usdToLocalRate", "minDepositUsd", "minTransferAmount", "initialBalance"]) {
-    const n = coerceNumber(body[key]);
-    if (n === null || n < 0 || n > 1_000_000) throw jsonError(400, `${key} must be a number between 0 and 1000000.`);
-    numbers[key] = n;
-  }
-
-  // Optional URL field.
-  let supportUrl: string | undefined;
-  if (body.supportUrl !== undefined && body.supportUrl !== null) {
-    if (typeof body.supportUrl !== "string" || body.supportUrl.length > 500 || !isValidUrl(body.supportUrl)) {
-      throw jsonError(400, "supportUrl must be a valid URL of max 500 characters.");
+    // Required fields (mirror UpdateSettingsDto).
+    const currencySymbol = body.currencySymbol;
+    if (typeof currencySymbol !== "string" || currencySymbol.length < 1 || currencySymbol.length > 8) {
+      throw jsonError(400, "currencySymbol must be a string of 1-8 characters.");
     }
-    supportUrl = body.supportUrl;
-  }
+    const siteName = body.siteName;
+    if (typeof siteName !== "string" || siteName.length < 1 || siteName.length > 80) {
+      throw jsonError(400, "siteName must be a string of 1-80 characters.");
+    }
+    const numbers: Record<string, number> = {};
+    for (const key of ["usdToLocalRate", "minDepositUsd", "minTransferAmount", "initialBalance"]) {
+      const n = coerceNumber(body[key]);
+      if (n === null || n < 0 || n > 1_000_000) throw jsonError(400, `${key} must be a number between 0 and 1000000.`);
+      numbers[key] = n;
+    }
+
+    // Optional URL field — empty string clears it (frontend sends "" for empty inputs).
+    let supportUrl: string | undefined;
+    if (typeof body.supportUrl === "string" && body.supportUrl.trim() === "") {
+      supportUrl = "";
+    } else if (body.supportUrl !== undefined && body.supportUrl !== null) {
+      if (typeof body.supportUrl !== "string" || body.supportUrl.length > 500 || !isValidUrl(body.supportUrl)) {
+        throw jsonError(400, "supportUrl must be a valid URL of max 500 characters.");
+      }
+      supportUrl = body.supportUrl;
+    }
 
   // Optional string fields.
   const optionals: Record<string, string | undefined> = {};
@@ -263,5 +271,8 @@ export async function PUT(req: Request) {
     throw error;
   }
 
-  return Response.json({ success: true });
+    return Response.json({ success: true });
+  } catch (e) {
+    return routeError(e);
+  }
 }

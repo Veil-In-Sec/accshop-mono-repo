@@ -1,9 +1,11 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 
+import { publicOriginIsHttps } from "@/lib/admin-token"
+
 import { db } from "./db"
 
-function normalizedBaseUrl(): string {
+export function normalizedBaseUrl(): string {
   // In the merged app auth lives on the same origin: /api/auth.
   // better-auth baseURL must be the origin without the /api/auth suffix.
   const site =
@@ -35,11 +37,11 @@ export const auth = betterAuth({
       },
     },
   },
-  trustedOrigins: [...new Set([...webOrigins, "http://localhost:3000"])],
+  trustedOrigins: [...new Set([...webOrigins, normalizedBaseUrl(), "http://localhost:3000"])],
   advanced: {
     defaultCookieAttributes: {
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: publicOriginIsHttps() ? "none" : "lax",
+      secure: publicOriginIsHttps(),
       httpOnly: true,
     },
   },

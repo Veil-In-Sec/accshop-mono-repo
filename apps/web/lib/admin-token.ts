@@ -15,3 +15,15 @@ export function safeEqualHex(a: string, b: string): boolean {
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
   return diff === 0
 }
+
+/**
+ * True only when the public origin is https. Cookie `Secure` (and
+ * `SameSite=None`) must follow the URL scheme, NOT NODE_ENV:
+ * production on plain http (IP:port) drops `Secure` cookies, which
+ * silently breaks signup/login sessions while dev keeps working.
+ */
+export function publicOriginIsHttps(): boolean {
+  const site =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? "http://localhost:3000"
+  return site.trim().toLowerCase().startsWith("https://")
+}

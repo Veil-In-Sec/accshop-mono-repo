@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Eye } from "lucide-react"
+import { Eye, Package } from "lucide-react"
 import useSWR from "swr"
 
 import { listAllOrders } from "@/app/actions/admin"
@@ -43,6 +43,9 @@ export function OrdersTable({ orders: initialOrders }: { orders: OrderRow[] }) {
   )
   const { page, totalPages, total, paged, setPage } = usePagination(orders)
 
+  const isCustomProduct = (order: OrderRow) => order.supplier === "custom"
+  const needsDelivery = (order: OrderRow) => isCustomProduct(order) && order.status === "processing"
+
   return (
     <div className="rounded-xl border border-border bg-card">
       <Table className="thead-material">
@@ -75,17 +78,27 @@ export function OrdersTable({ orders: initialOrders }: { orders: OrderRow[] }) {
                 <ClientDate iso={o.purchasedAt} />
               </TableCell>
               <TableCell className="text-right">
-                {o.status === "completed" ? (
-                  <Link
-                    href={`/admin/orders/${o.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-[#5362AD]/15 px-3 py-1.5 text-xs font-medium text-[#8b9bff] dark:text-[#8b9bff] hover:bg-[#5362AD]/25"
-                  >
-                    <Eye className="size-3" />
-                    View
-                  </Link>
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
+                <div className="flex justify-end gap-1">
+                  {o.status === "completed" ? (
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-[#5362AD]/15 px-3 py-1.5 text-xs font-medium text-[#8b9bff] dark:text-[#8b9bff] hover:bg-[#5362AD]/25"
+                    >
+                      <Eye className="size-3" />
+                      View
+                    </Link>
+                  ) : needsDelivery(o) ? (
+                    <Link
+                      href={`/admin/orders/${o.id}/deliver`}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 px-3 py-1.5 text-xs font-medium text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
+                    >
+                      <Package className="size-3.5 mr-1.5" />
+                      Deliver
+                    </Link>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

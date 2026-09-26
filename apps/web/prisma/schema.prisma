@@ -96,6 +96,7 @@ model Order {
   id                    Int      @id @default(autoincrement())
   userId                String   @map("userId")
   productId             Int?     @map("product_id")
+  product               Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   productName           String   @map("product_name")
   tag                   String?
   price                 Decimal  @db.Decimal(12, 2)
@@ -107,7 +108,7 @@ model Order {
   deliveredCredentials  String?  @map("delivered_credentials")
   actualCost            Decimal? @map("actual_cost") @db.Decimal(12, 2)
   status                String   @default("pending") @map("status") // pending | processing | completed | failed
-  supplier              String   @default("hotmail143") // hotmail143 | bulkmail
+  supplier              String   @default("hotmail143") // hotmail143 | bulkmail | custom
   externalOrderId       String?  @map("external_order_id")
   paymentMethodId       Int?     @map("payment_method_id")
   transactionReference  String?  @map("transaction_reference")
@@ -163,6 +164,8 @@ model Product {
   externalAccountType String?  @map("external_account_type")
   supplier            String   @default("hotmail143") // hotmail143 | bulkmail | custom
   bulkmailProductId   Int?     @map("bulkmail_product_id")
+
+  orders Order[]
 
   @@map("products")
 }

@@ -220,10 +220,13 @@ async function parseRequestError(res: Response): Promise<never> {
 
 /**
  * Parses one supplier stock string into an account.
- * Shapes seen live: "email:password" and "email|password|refresh_token|client_id"
- * (e.g. Outlook token products). Whichever delimiter comes FIRST wins, so a
- * colon inside a pipe-format token (or a pipe inside a password) can't
- * mangle the split.
+ * Shapes seen live: "email:password", "email---password" (e.g. BulkMail
+ * code-URL products like "user@gmail.com---https://api.mailgen.shop/..."),
+ * and "email|password|refresh_token|client_id" (e.g. Outlook token
+ * products). Pipe format wins when its delimiter comes first, so a
+ * colon inside a pipe-format token can't mangle the split. Email is
+ * matched first so a colon inside the password (e.g. "https://...")
+ * is never treated as the separator.
  */
 function parseAccount(entry: string): BulkMailAccount {
   const text = (entry ?? "").trim()
@@ -237,6 +240,31 @@ function parseAccount(entry: string): BulkMailAccount {
       refresh_token: parts[2] || undefined,
       client_id: parts.slice(3).join("|") || undefined,
     }
+  }
+  // BulkMail code-URL shape: "email---https://..." — split on the
+  // triple-dash before falling back to colon handling.
+  const dashIdx = text.indexOf("---")
+  if (dashIdx > 0) {
+    return {
+      email: text.slice(0, dashIdx).trim(),
+      password: text
+        .slice(dashIdx + 3)
+        .trim()
+        .replace(/^[\s:|\-]+/, "")
+        .trim(),
+    }
+  }
+  // Extract the leading email first so passwords containing ":" (URLs)
+  // survive intact — only the delimiter right after the email is stripped.
+  const emailMatch = text.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)
+  if (emailMatch) {
+    const email = emailMatch[0]
+    const rest = text
+      .slice(email.length)
+      .trim()
+      .replace(/^[\s:|\-]+/, "")
+      .trim()
+    return { email, password: rest }
   }
   if (colonIdx > 0) {
     return {

@@ -44,6 +44,7 @@ import type {
   TotpLiveCode,
   TotpCreateInput,
   TotpCreateResult,
+  TotpPreviewResult,
 } from "./types"
 
 export type {
@@ -91,6 +92,7 @@ export type {
   TotpLiveCode,
   TotpCreateInput,
   TotpCreateResult,
+  TotpPreviewResult,
 } from "./types"
 
 const json = (body: unknown) => ({ body: JSON.stringify(body) })
@@ -219,6 +221,8 @@ export const serverApi = {
     codes: () => serverFetch<TotpLiveCode[]>("/totp/codes"),
     create: (input: TotpCreateInput) =>
       serverFetch<TotpCreateResult>("/totp/keys", { method: "POST", ...json(input) }),
+    preview: (input: TotpCreateInput) =>
+      serverFetch<TotpPreviewResult>("/totp/preview", { method: "POST", ...json(input) }),
     rename: (id: number, input: { label?: string; issuer?: string }) =>
       serverFetch<TotpKeyMeta>(`/totp/keys/${id}`, { method: "PATCH", ...json(input) }),
     remove: (id: number) =>
@@ -272,8 +276,19 @@ export const serverApi = {
       serverFetch<ActionResult>(`/admin/users/${encodeURIComponent(userId)}`, {
         method: "DELETE",
       }),
-    orders: () => serverFetch<AdminOrder[]>("/admin/orders"),
-    ordersAttentionCount: () => serverFetch<{ count: number }>("/admin/orders/attention-count"),
+    orders: {
+      list: () => serverFetch<AdminOrder[]>("/admin/orders"),
+      attentionCount: () => serverFetch<{ count: number }>("/admin/orders/attention-count"),
+      deliverCustom: (orderId: number, input: { credentials: Array<{ email: string; password: string; refresh_token?: string; client_id?: string }> }) =>
+        serverFetch<{ success: boolean; message: string }>(`/admin/orders/${orderId}/deliver-custom`, {
+          method: "POST",
+          ...json(input),
+        }),
+      rejectCustom: (orderId: number) =>
+        serverFetch<{ success: boolean; message: string }>(`/admin/orders/${orderId}/reject-custom`, {
+          method: "POST",
+        }),
+    },
     deposits: {
       list: (status?: string) =>
         serverFetch<AdminDepositRequest[]>(

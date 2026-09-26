@@ -9,12 +9,47 @@ export interface CredentialAccount {
 export const PIPE_FORMAT_HINT = "email|password|refresh_token|client_id"
 
 /**
+ * Repairs accounts mangled by the old BulkMail colon-split
+ * ("user@gmail.com---https" + "//api.mailgen.shop/..." split on the
+ * ":" inside "https://"). Stored JSON keeps that shape, so heal on read:
+ * "email---https" / "//..." -> "email" / "https://...".
+ */
+export function normalizeAccount(acc: CredentialAccount): CredentialAccount {
+  const email = (acc.email ?? "").trim()
+  const password = (acc.password ?? "").trim()
+  const dashIdx = email.indexOf("---")
+  if (dashIdx > 0) {
+    const realEmail = email.slice(0, dashIdx).trim()
+    let suffix = email.slice(dashIdx + 3).trim()
+    // Suffix is the protocol fragment lost at the old split ("https").
+    let realPassword = password
+    if (suffix && password.startsWith("//")) {
+      realPassword = `${suffix}:${password}`
+    } else if (suffix) {
+      realPassword = suffix + password
+    }
+    if (realEmail && realPassword) {
+      return { ...acc, email: realEmail, password: realPassword.trim() }
+    }
+  }
+  // Second mangled shape: email kept the trailing protocol ("...---https"
+  // was trimmed differently). Heal the same way when password is URL-tail.
+  if (/^https?$/i.test(password) && email.includes("---")) {
+    const [realEmail, ...rest] = email.split("---")
+    void rest
+    if (realEmail.trim()) return { ...acc, email: realEmail.trim() }
+  }
+  return acc
+}
+
+/**
  * Renders one account as a pipe line, omitting segments the product does not
  * provide. Accounts without OAuth tokens render as `email|password` (or just
  * `email`) — never with trailing `|` separators.
  */
 export function toPipeLine(acc: CredentialAccount): string {
-  const parts = [acc.email, acc.password, acc.refresh_token ?? "", acc.client_id ?? ""]
+  const fixed = normalizeAccount(acc)
+  const parts = [fixed.email, fixed.password, fixed.refresh_token ?? "", fixed.client_id ?? ""]
   let end = parts.length
   while (end > 1 && !parts[end - 1]) end -= 1
   return parts.slice(0, end).join("|")
@@ -66,19 +101,19 @@ export function parseCredentialAccounts(input: {
   if (input.deliveredCredentials) {
     try {
       const parsed: unknown = JSON.parse(input.deliveredCredentials)
-      if (Array.isArray(parsed)) accounts = parsed.filter(isAccount)
+      if (Array.isArray(parsed)) accounts = parsed.filter(isAccount).map(normalizeAccount)
     } catch {
       accounts = []
     }
   }
   if (accounts.length === 0 && input.deliveredEmail) {
     accounts = [
-      {
+      normalizeAccount({
         email: input.deliveredEmail,
         password: input.deliveredPassword ?? "",
         refresh_token: input.deliveredRefreshToken || undefined,
         client_id: input.deliveredClientId || undefined,
-      },
+      }),
     ]
   }
   return accounts

@@ -6,16 +6,29 @@
 const { createServer } = require("http")
 const next = require("next")
 
-const port = Number(process.env.PORT ?? 3000)
+const desiredPort = Number(process.env.PORT ?? 3000)
 const hostname = process.env.HOSTNAME ?? process.env.HOST ?? "0.0.0.0"
 const dev = process.env.NODE_ENV !== "production"
 
-const app = next({ dev, dir: __dirname, hostname, port })
+const app = next({ dev, dir: __dirname, hostname, port: desiredPort })
 const handle = app.getRequestHandler()
 
-app.prepare().then(() => {
-  createServer((req, res) => handle(req, res)).listen(port, hostname, (err) => {
-    if (err) throw err
+function listen(port) {
+  const server = createServer((req, res) => handle(req, res))
+  server.once("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.log(`Port ${port} in use, trying ${port + 1}...`)
+      server.close()
+      listen(port + 1)
+    } else {
+      throw err
+    }
+  })
+  server.listen(port, hostname, () => {
     console.log(`[web] AccShop web ready on http://${hostname}:${port}`)
   })
+}
+
+app.prepare().then(() => {
+  listen(desiredPort)
 })

@@ -1,15 +1,16 @@
 /**
  * Graph Mail supplier client — fetches Outlook/Hotmail verification codes via
- * POST https://tools.dongvanfb.net/api/graph_messages
+ * POST https://tools.dongvanfb.net/api/graph_code
+ * (the same endpoint the supplier's own get_code_mail page uses).
  *
  * Request body:
- *   { email, refresh_token, client_id, list_mail?: "all" }
+ *   { email, pass, refresh_token, client_id, type: "all" }
  *
  * Response body:
- *   {
- *     email, password, status: true, code: "",
- *     messages: [{ uid, date, from: [{ name, address }], subject, code, message }]
- *   }
+ *   { email, password, status, code, content, date }
+ *   - OTP present:  { status: true, code: "123456", ... }
+ *   - No OTP yet:   { status: false, code: "", content: "No code found.", ... }
+ *   - Bad tokens:   { status: false, code: "", content: "IMAP connection failed: ...", ... }
  *
  * This replaces the Hotmail143 `hotmail-code` / `outlook-code` lookups for
  * code retrieval. Purchasing / balance / stock still go through Hotmail143.
@@ -18,7 +19,7 @@
 import { badRequest, fetchWithTimeout, safeJson } from "./upstream"
 
 const DEFAULT_GRAPH_MAIL_URL =
-  process.env.GRAPH_MAIL_API_URL ?? "https://tools.dongvanfb.net/api/graph_messages"
+  process.env.GRAPH_MAIL_API_URL ?? "https://tools.dongvanfb.net/api/graph_code"
 
 export function getGraphMailUrl(): string {
   const raw = (process.env.GRAPH_MAIL_API_URL ?? DEFAULT_GRAPH_MAIL_URL).trim()
@@ -45,13 +46,20 @@ export interface GraphMessagesRaw {
   status?: boolean
   code?: string
   messages?: GraphMailMessage[]
+  /** Detail line, e.g. "No code found." or "IMAP connection failed: ...". */
+  content?: string
+  date?: string
+  message?: string
+  error?: string
 }
 
 export interface GraphMailInput {
   email: string
+  password?: string
   refresh_token: string
   client_id: string
-  list_mail?: string
+  /** Mail-type filter, comma-joined ("all" default — mirrors the supplier page). */
+  type?: string
 }
 
 export interface GraphCodeResult {
@@ -67,47 +75,6 @@ export interface GraphCodeResult {
     retryAfter?: number
     shouldRetry?: boolean
   } | null
-}
-
-function extractCodeFromText(text: string): string | null {
-  if (!text) return null
-  // Common OTP shapes: 4-8 digit codes, optionally spaced/dashed.
-  const patterns = [
-    /(?:code|mã|otp|verification)[^\d]{0,40}(\d[\d\s-]{3,9}\d)/i,
-    /\b(\d{6})\b/,
-    /\b(\d{5})\b/,
-    /\b(\d{4})\b/,
-    /\b(\d{7,8})\b/,
-  ]
-  for (const re of patterns) {
-    const m = text.match(re)
-    if (m?.[1]) {
-      const digits = m[1].replace(/[\s-]+/g, "")
-      if (/^\d{4,8}$/.test(digits)) return digits
-    }
-  }
-  return null
-}
-
-/** Pick the newest message that carries a code (upstream `code` or regex fallback). */
-function pickCode(
-  messages: GraphMailMessage[],
-  topLevelCode?: string,
-): { code: string | null; latest: GraphMailMessage | null } {
-  const cleanTop = (topLevelCode ?? "").trim()
-  if (/^\d{4,8}$/.test(cleanTop)) {
-    const withCode = messages.find((m) => (m.code ?? "").trim() === cleanTop) ?? messages[0] ?? null
-    return { code: cleanTop, latest: withCode }
-  }
-  for (const m of messages) {
-    const c = (m.code ?? "").trim()
-    if (/^\d{4,8}$/.test(c)) return { code: c, latest: m }
-  }
-  for (const m of messages) {
-    const fallback = extractCodeFromText(`${m.subject ?? ""}\n${m.message ?? ""}`)
-    if (fallback) return { code: fallback, latest: m }
-  }
-  return { code: null, latest: messages[0] ?? null }
 }
 
 /** Raw call — returns the upstream payload untouched (plus code normalization). */
@@ -127,9 +94,10 @@ export async function getGraphMessages(input: GraphMailInput): Promise<GraphMess
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
+        pass: input.password ?? "",
         refresh_token,
         client_id,
-        list_mail: input.list_mail ?? "all",
+        type: input.type ?? "all",
       }),
     },
     30000,
@@ -142,8 +110,16 @@ export async function getGraphMessages(input: GraphMailInput): Promise<GraphMess
     )
   }
   const raw = (await safeJson(res, "GraphMail")) as GraphMessagesRaw
-  if (raw && raw.status === false) {
-    badRequest("GraphMail rejected the credentials — the refresh_token or client_id may be expired.")
+  if (raw && raw.status === false && !/^\d{4,8}$/.test((raw.code ?? "").trim())) {
+    const detail = (raw.content ?? raw.message ?? raw.error ?? "").trim()
+    // Credential-level failures (dead tokens) vs. "no OTP yet".
+    if (/imap connection failed|invalid|expired|unauthori[sz]ed|forbidden|empty access token|bad token/i.test(detail)) {
+      badRequest(
+        detail
+          ? `GraphMail rejected the credentials (${detail})`
+          : "GraphMail rejected the credentials — the refresh_token or client_id may be expired.",
+      )
+    }
   }
   return raw ?? {}
 }
@@ -151,13 +127,15 @@ export async function getGraphMessages(input: GraphMailInput): Promise<GraphMess
 /**
  * Normalized code lookup — same envelope shape as the old Hotmail lookup so
  * the dashboard retry UX (`shouldRetry` + `retryAfter`) keeps working.
+ * The graph_code endpoint returns a single top-level `code` (no message
+ * list), so there is nothing to scan — a filled code is the answer,
+ * anything else is "no OTP yet".
  */
 export async function getGraphCode(input: GraphMailInput): Promise<GraphCodeResult> {
   const raw = await getGraphMessages(input)
-  const messages = Array.isArray(raw.messages) ? raw.messages : []
-  const { code, latest } = pickCode(messages, raw.code)
+  const code = (raw.code ?? "").trim()
 
-  if (code) {
+  if (/^\d{4,8}$/.test(code)) {
     return {
       successful: true,
       code: 0,
@@ -166,24 +144,22 @@ export async function getGraphCode(input: GraphMailInput): Promise<GraphCodeResu
       data: {
         code,
         email: raw.email ?? input.email,
-        messages,
-        latest,
+        messages: [],
+        latest: null,
       },
     }
   }
+  const detail = (raw.content ?? "").trim()
   return {
     successful: false,
     code: -2,
-    msg:
-      messages.length === 0
-        ? "No messages yet — trigger the code on the source site, then retry."
-        : "No code in the latest messages yet — trigger a new OTP, then retry.",
+    msg: detail || "No code in the mailbox yet — trigger a new OTP, then retry.",
     timestamp: Date.now(),
     data: {
       code: null,
       email: raw.email ?? input.email,
-      messages,
-      latest,
+      messages: [],
+      latest: null,
       shouldRetry: true,
       retryAfter: 10,
     },
@@ -211,13 +187,14 @@ export function parseGraphLine(line: string): GraphMailInput {
   }
   if (parts.length === 3) {
     // email|refresh_token|client_id
-    return { email: parts[0], refresh_token: parts[1], client_id: parts[2], list_mail: "all" }
+    return { email: parts[0], refresh_token: parts[1], client_id: parts[2], type: "all" }
   }
   // Full 4-part line (extra segments ignored).
   return {
     email: parts[0],
+    password: parts[1],
     refresh_token: parts[2],
     client_id: parts[3],
-    list_mail: "all",
+    type: "all",
   }
 }
