@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../app/admin/layout.tsx"],"sourcesContent":["export default function AdminRootLayout({ children }: { children: React.ReactNode }) {\n  return children\n}\n"],"names":["AdminRootLayout","children"],"mappings":"wDAAe,SAASA,AAAgB,UAAEC,CAAQ,CAAiC,EACjF,OAAOA,CACT"}
