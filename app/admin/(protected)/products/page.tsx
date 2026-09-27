@@ -23,6 +23,8 @@ export default async function AdminProductsPage() {
         initialCategories={categories}
         initialHotmailProducts={hotmailProducts.ok ? hotmailProducts.products : []}
         initialBulkmailProducts={bulkmailProducts.ok ? bulkmailProducts.products : []}
+        hotmailError={hotmailProducts.ok ? null : hotmailProducts.message}
+        bulkmailError={bulkmailProducts.ok ? null : bulkmailProducts.message}
         usdToLocalRate={fx.rate}
         rateSource={fx.source}
         currencySymbol={settings?.currencySymbol ?? fx.currency}
