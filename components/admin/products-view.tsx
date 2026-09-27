@@ -2,6 +2,9 @@
 
 import * as React from "react"
 
+import { TriangleAlert } from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -34,6 +37,8 @@ export function ProductsView({
   initialCategories,
   initialHotmailProducts,
   initialBulkmailProducts,
+  hotmailError,
+  bulkmailError,
   usdToLocalRate,
   rateSource,
   currencySymbol,
@@ -42,6 +47,8 @@ export function ProductsView({
   initialCategories: Array<{ id: number; name: string }>
   initialHotmailProducts: HotmailProduct[]
   initialBulkmailProducts: BulkMailProduct[]
+  hotmailError: string | null
+  bulkmailError: string | null
   usdToLocalRate: number
   rateSource: string
   currencySymbol: string
@@ -80,6 +87,25 @@ export function ProductsView({
           </button>
         ))}
       </div>
+
+      {view === "hotmail" && hotmailError ? (
+        <Alert variant="destructive" className="border-red-500/20 bg-red-500/10">
+          <TriangleAlert />
+          <AlertTitle>Hotmail143 unavailable</AlertTitle>
+          <AlertDescription>
+            {hotmailError} Check the API key in Settings → Hotmail143 API Gateway, then reload this page.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {view === "bulkmail" && bulkmailError ? (
+        <Alert variant="destructive" className="border-red-500/20 bg-red-500/10">
+          <TriangleAlert />
+          <AlertTitle>BulkMail unavailable</AlertTitle>
+          <AlertDescription>
+            {bulkmailError} Check the API key in Settings → BulkMail API Gateway, then reload this page.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {view === "custom" ? (
         <CustomProductsTable
