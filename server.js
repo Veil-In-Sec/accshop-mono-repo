@@ -2,7 +2,7 @@
 // and plain VPS `node server.js`. Honors the PORT/HOST assigned by the host,
 // unlike bare `next start` which defaults to port 3000 on localhost.
 //
-// cPanel setup: App Root = accshop-mono-repo/apps/web, Startup File = server.js
+// cPanel setup: App Root = the deployed folder itself, Startup File = server.js
 //
 // Server-Actions-only app: NO app/api/* routes, NO .env files. All
 // configuration is hardcoded (prisma/schema.prisma datasource URL,

@@ -4,6 +4,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Pre-generated and committed for cPanel shared hosting (no `prisma
+  // generate` runs on the server). `native` covers this build machine;
+  // the rhel/musl targets cover CloudLinux/AlmaLinux shared hosts —
+  // Prisma auto-selects the matching query engine at runtime.
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x", "linux-musl"]
 }
 
 datasource db {
