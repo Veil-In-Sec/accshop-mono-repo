@@ -31,8 +31,8 @@ export default function LoginPage() {
       rememberMe: remember,
     })
     if (!signInError) {
-      router.push("/dashboard")
-      router.refresh()
+      // Use window.location for hard navigation so the new session cookie is sent
+      window.location.href = "/dashboard"
     } else {
       setError("Invalid email or password.")
       setIsSubmitting(false)
